@@ -6,6 +6,7 @@ else:
         config = ConfigParser()
         file = "accinfo.ini"
         config.read(file)
+        pass1 = config["user"]["password"]
         appValid = True
         settings = True
         while settings == True:
