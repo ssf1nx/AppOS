@@ -14,7 +14,7 @@ else:
     print("\n\nWelcome,\n\n")
     while userChoice == False:
         print("Please Choose Your User.\n\n")
-        print("1. " + name + "\n2. Guest\n\n0. Exit")
+        print("1. " + name + "\n\n0. Exit")
         userinput = input()
         if(userinput == "1"):
             userChoice = True
@@ -41,10 +41,6 @@ else:
                             print("Invalid App")
                 else:
                     print("Incorrect Password")
-        elif(userinput == "2"):
-            userChoice = True
-            print("guest")
-            input()
         elif(userinput == "0"):
             exit()
         else:
