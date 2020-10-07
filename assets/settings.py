@@ -57,6 +57,7 @@ else:
                     settings = False
                     appValid = False
                     from assets import devtoolsinstall
+                    devtoolsinstall.main()
                 else:
                     print("Installed Already")
             elif(settingsChoice == "~" and devtrue == "true"):
