@@ -56,6 +56,7 @@ else:
                 print("Please enter the name of the app")
                 appname = str(input())
                 print("Added!")
+                print("Please Re-run this program to update changes.")
                 config.set("app1", "enabled", "true")
                 config.set("app1", "name", appname)
                 with open(file, "w") as configfile:
