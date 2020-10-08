@@ -23,6 +23,9 @@ else:
             config.set("user", "password", pass1)
             config.add_section("devtools")
             config.set("devtools", "enabled", "false")
+            config.add_section("app1")
+            config.set("app1", "enabled", "false")
+            config.set("app1", "name", "placeholder")
 
             with open(file, "w") as configfile:
                 config.write(configfile)

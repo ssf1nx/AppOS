@@ -12,13 +12,13 @@ else:
         while settings == True:
             devtrue = config["devtools"]["enabled"]
             print("Please Choose an Option")
-            print("\n1. Change your username\n2. Change your password\n\n#. Credits\n\n0. Exit")
+            print("\n1. Change your username\n2. Change your password\n3. Add/Change App 1\n\n#. Credits\n\n0. Exit")
             if(devtrue == "true"):
                 print("\n\n\n~. DevTools Control Panel")
             settingsChoice = input()
             if(settingsChoice == "1"):
                 print("\nPlease Enter Your New Username")
-                name = input()
+                name = str(input())
                 config.set("user", "username", name)
                 with open(file, "w") as configfile:
                     config.write(configfile)
@@ -52,6 +52,14 @@ else:
             elif(settingsChoice == "0"):
                 settings = False
                 appValid = False
+            elif(settingsChoice == "3"):
+                print("Please enter the name of the app")
+                appname = str(input())
+                print("Added!")
+                config.set("app1", "enabled", "true")
+                config.set("app1", "name", appname)
+                with open(file, "w") as configfile:
+                    config.write(configfile)
             elif(settingsChoice == "devtools.enabled = true"):
                 if(devtrue == "false"):
                     settings = False
