@@ -21,8 +21,6 @@ else:
             config.add_section("user")
             config.set("user", "username", username)
             config.set("user", "password", pass1)
-            config.add_section("devtools")
-            config.set("devtools", "enabled", "false")
             config.add_section("app1")
             config.set("app1", "enabled", "false")
             config.set("app1", "name", "placeholder")
