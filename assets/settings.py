@@ -6,12 +6,21 @@ else:
         config = ConfigParser()
         file = "accinfo.ini"
         config.read(file)
+        app1e = config["app1"]["enabled"]
         pass1 = config["user"]["password"]
         appValid = True
         settings = True
+        if(app1e == "true"):
+            AppStatus = "Change"
+        else:
+            AppStatus = "Add"
         while settings == True:
             print("Please Choose an Option")
-            print("\n1. Change your username\n2. Change your password\n3. Add/Change App 1\n\n#. Credits\n\n0. Exit")
+            print("\n1. Change your username\n2. Change your password")
+            print("3. " + AppStatus + " App 1")
+            if(app1e == "true"):
+                print("4. Remove App 1")
+            print("\n\n#. Credits\n\n0. Exit")
             settingsChoice = input()
             if(settingsChoice == "1"):
                 print("\nPlease Enter Your New Username")
@@ -58,5 +67,11 @@ else:
                 config.set("app1", "name", appname)
                 with open(file, "w") as configfile:
                     config.write(configfile)
+            elif(settingsChoice == "4" and app1e == "true"):
+                config.set("app1", "enabled", "false")
+                with open(file, "w") as configfile:
+                    config.write(configfile)
+                print("Removed App 1!")
+                print("Please Re-run this program to update changes.")
             else:
                 print("Invalid Choice")
