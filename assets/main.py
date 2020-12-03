@@ -1,6 +1,7 @@
 if(__name__ == "__main__"):
     print("Please run the AppOS.py file instead.")
 else:
+    import getpass
     from configparser import ConfigParser
     config = ConfigParser()
     file = "accinfo.ini"
@@ -29,7 +30,7 @@ else:
             passwordCorrect = False
             while passwordCorrect == False:
                 print("Enter Password:")
-                password = input()
+                password = getpass.getpass(prompt="")
                 if(password == pass1):
                     passwordCorrect = True
                     appValid = False

@@ -1,6 +1,7 @@
 if(__name__ == "__main__"):
     print("Please run the AppOS.py file instead.")
 else:
+    import getpass
     from configparser import ConfigParser
     config = ConfigParser()
 
@@ -11,11 +12,11 @@ else:
     print("Please enter a username.")
     username = input()
     print("Please enter a password.")
-    pass1 = input()
+    pass1 = getpass.getpass(prompt="")
     passCreate = True
     while passCreate == True:
         print("Please re-enter your password.")
-        pass2 = input()
+        pass2 = getpass.getpass(prompt="")
         if(pass1 == pass2):
             passCreate = False
             config.add_section("user")
