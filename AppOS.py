@@ -86,6 +86,8 @@ class Pre:
         config.set("user", "username", username)
         # Calls the Pre.passwordCreation() function and returns encoded password.
         config.set("user", "password", Pre.passwordCreation(False))
+        config.add_section("devtools")
+        config.set("devtools", "enabled", "False")
         
         # Writes (and creates) to accinfo.ini file.
         with open("accinfo.ini", "w") as configfile:
@@ -224,18 +226,23 @@ class Main:
 class Apps:
 
     # Settings app. Allows for password and username changes. 
-    def options(settings):
+    def options(inUse):
 
         clearTerm()
 
-        pass1 = config["user"]["password"]
+        while inUse == True:
+            
 
-        while settings == True:
             clearTerm()
 
             print("Please Choose an Option")
             print("\n1. Change your username\n2. Change your password")
             print("\n\n#. Credits\n\n0. Exit\n")
+
+            devtoolsBoolean = config["devtools"]["enabled"]
+            if devtoolsBoolean == "True":
+                print("\n\n~. DevTools Access\n")
+
             settingsChoice = input(": ")
 
             # Used for changing the user's username.
@@ -296,9 +303,30 @@ class Apps:
 
                 clearTerm()
 
+            # "Developer" tools to edit the accinfo.ini file, possibly among other things in future updates.
+            elif settingsChoice == "~":
+                clearTerm()
+
+                devtoolsBoolean = config["devtools"]["enabled"]
+
+                if devtoolsBoolean == "False":
+                    print("Would you like to enable DevTools? (y/N)")
+                    devtoolResp = input(": ")
+                    if devtoolResp.lower() == "y":
+                        config.set("devtools", "enabled", "True")
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+                        print("\n\nDevTools enabled.")
+                        time.sleep(1.5)
+                    else:
+                        print("\n\nCancelled.")
+                        time.sleep(1.5)
+                else:
+                    Apps.devtools(True)
+
             # Exits the settings app back to the App Menu.
             elif settingsChoice == "0":
-                settings = False
+                inUse = False
                 appValid = False
 
             else:
@@ -306,6 +334,220 @@ class Apps:
 
                 time.sleep(1.5)
 
+    # DevTools app. Allows changes of the accinfo.ini file.
+    def devtools(inUse):
+
+        while inUse == True:
+            clearTerm()
+
+            config.read(file)
+
+            print("DevTools:\n\n")
+            print("1. Edit/View accinfo.ini file\n")
+
+            print("\n0. Exit\n")
+            devtoolsChoice = str(input(": "))
+
+            
+            if devtoolsChoice == "1":
+                clearTerm()
+                Apps.configEditor(True)
+                
+            elif devtoolsChoice == "0":
+                inUse = False
+            else:
+                print("\nInvalid Choice")
+
+                time.sleep(0.5)
+
+    def configEditor(devtoolsEdit):
+
+        try:
+
+            devtoolsEncoding = True
+
+            while devtoolsEdit == True:
+
+                clearTerm()
+
+                print("Config File (accinfo.ini):\n")
+                print("[version]")
+                print("versionnum = " + config["version"]["versionnum"] + " # Only changes the version of the accinfo.ini file.")
+                print("\n[user]")
+                print("username = " + config["user"]["username"])
+
+                if devtoolsEncoding == False:
+                    passcode = config["user"]["password"]
+                    passcode = base64.b64decode(passcode)
+                    passcode = passcode.decode("utf-8")
+                    print("password = " + str(passcode) + " # Decoded from Base64. Saved in Base64.")
+
+                else:
+                    print("password = " + config["user"]["password"] + " # Encoded in Base64. What is actually saved.")
+
+                print("\n[devtools]")
+                print("enabled = " + config["devtools"]["enabled"])
+                drawLine()
+                print("\n1. Edit [version]\n2. Edit [user]\n3. Edit [devtools]\n\n0. Cancel\n")
+                print("#. Toggle Base64 encoding\n")
+                devtoolsChoice = str(input(": "))
+
+                if devtoolsChoice == "1":
+
+                    clearTerm()
+
+                    print("Config File (accinfo.ini):\n")
+                    print("[version]")
+                    print("versionnum = " + config["version"]["versionnum"])
+                    print("\n---------------------------")
+                    print("\n1. Edit versionnum\n\n0. Back\n")
+                    devtoolsChoice = str(input(": "))
+
+                    if devtoolsChoice == "1":
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: versionnum = " + config["version"]["versionnum"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: versionnum = "))
+
+                        config.set("version", "versionnum", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+
+                    elif devtoolsChoice == "0":
+                        pass
+
+                    else:
+                        print("\nInvalid Choice")
+
+                        time.sleep(1.5)
+
+                elif devtoolsChoice == "2":
+
+                    clearTerm()
+
+                    print("Config File (accinfo.ini):\n")
+                    print("[user]")
+                    print("username = " + config["user"]["username"])
+                    if devtoolsEncoding == False:
+                        passcode = config["user"]["password"]
+                        passcode = base64.b64decode(passcode)
+                        passcode = passcode.decode("utf-8")
+                        print("password = " + str(passcode) + " # Decoded from Base64. Saved in Base64.")
+
+                    else:
+                        print("password = " + config["user"]["password"] + " # Encoded in Base64. What is actually saved.")
+
+                    print("\n---------------------------")
+                    print("\n1. Edit username\n2. Edit password\n\n0. Back\n")
+                    devtoolsChoice = str(input(": "))
+
+                    if devtoolsChoice == "1":
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: username = " + config["user"]["username"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: username = "))
+
+                        config.set("user", "username", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+
+                    elif devtoolsChoice == "2":
+
+                        clearTerm()
+
+                        print("Would you like to auto-encode (recommended) your input into Base64? (Y/n)\nOtherwise your raw input is saved.\n\n(Saving a non-Base64 input then trying to login with it will not work.)\n\n")
+                        devtoolsChoice = input(": ")
+                        
+                        if devtoolsChoice.lower() == "n":
+                            devtoolsEncodedPass = False
+                            print("\nAuto-encode has been disabled.")
+
+                            time.sleep(1.5)
+
+                            pass
+
+                        else:
+                            devtoolsEncodedPass = True
+                            print("\nAuto-encode has been enabled.")
+
+                            time.sleep(1.5)
+
+                            pass
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: password = " + config["user"]["password"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: password = "))
+
+                        if devtoolsEncodedPass == True:
+                            devtoolsChoice = base64.b64encode(bytes(devtoolsChoice, "utf-8"))
+                            devtoolsChoice = devtoolsChoice.decode("utf-8")
+
+                        elif devtoolsEncodedPass == False:
+                            pass
+
+                        config.set("user", "password", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+                    
+
+                    elif devtoolsChoice == "0":
+                        pass
+
+                    else:
+                        print("\nInvalid Choice")
+
+                        time.sleep(1.5)
+
+                elif devtoolsChoice == "0":
+                    devtoolsEdit = False
+
+                elif devtoolsChoice == "#":
+
+                    clearTerm()
+
+                    print("Are you sure you want to toggle? (y/N)\nThis will reveal/hide (decode/encode) your password while in DevTools this session, but WON'T change how it is saved in the accinfo.ini file.\n\n")
+                    devtoolsChoice = input(": ")
+                    
+                    if devtoolsChoice.lower() == "y":
+                        if devtoolsEncoding == True:
+                            print("\nToggling OFF (decoding)")
+                            devtoolsEncoding = False
+                            
+                            time.sleep(1.5)
+
+                        elif devtoolsEncoding == False:
+                            print("\nToggling ON (encoding)")
+                            devtoolsEncoding = True
+
+                            time.sleep(1.5)
+
+                    else:
+                        print("\nCancelling.")
+                        time.sleep(1.5)
+
+                else:
+                    print("\nInvalid Choice")
+
+                    time.sleep(1.5)
+
+        except:
+
+            clearTerm()
+            print("An error has occcured, cancelling.")
+
+            devtoolsEdit = False
+            
+            time.sleep(1.5)
+
+            
+
+            
 
 
 # AppOS title, subtitle, and version display.
@@ -323,6 +565,12 @@ def welcome():
 # Clears the terminal on both Windows and Linux systems.
 def clearTerm():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+
+# Prints a line in the terminal.
+def drawLine():
+    term_size = os.get_terminal_size()
+    print('_' * term_size.columns)
 
 
 
