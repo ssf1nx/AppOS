@@ -289,6 +289,10 @@ class Apps:
 
                     time.sleep(1.5)
 
+                    # Signs out the user after reset (check issue 3).
+                    inUse = False
+                    Main.signIn()
+
                 else:
                     print("\nInvalid Password")
 
