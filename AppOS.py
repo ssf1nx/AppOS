@@ -12,7 +12,7 @@ config = ConfigParser()
 file = "accinfo.ini"
 
 # Version (duh).
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 
 # Start-up type function.
 class Pre:
@@ -35,7 +35,6 @@ class Pre:
                         if onlineVer != __version__:
                             print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
                             print("Current version: " + __version__)
-                            input("Enter to continue...")
 
                         elif onlineVer == __version__:
                             print("Latest Version\n")
@@ -70,6 +69,7 @@ class Pre:
                     print("Invalid or missing local version file.")
         except:
             print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
+        input("Enter to continue...")
 
 
     # Used to create user profile and to create the initial accinfo.ini file.
@@ -151,7 +151,7 @@ class Main:
             app = str(input(": "))
 
             if app == "0":
-                Apps.options(True)
+                Apps.settings(True)
 
             elif app == "#":
                 userChoice = False
@@ -178,7 +178,7 @@ class Main:
             clearTerm()
             welcome()
 
-            print("\n\nWelcome,\n\n") 
+            print("\nWelcome,\n\n") 
             print("Please Choose Your User.\n\n")
             print("1. " + name + "\n\n0. Exit\n")
             userinput = input(": ")
@@ -226,7 +226,7 @@ class Main:
 class Apps:
 
     # Settings app. Allows for password and username changes. 
-    def options(inUse):
+    def settings(inUse):
 
         clearTerm()
 
@@ -342,8 +342,8 @@ class Apps:
 
             config.read(file)
 
-            print("DevTools:\n\n")
-            print("1. Edit/View accinfo.ini file\n")
+            print("DevTools Version 1.0:\n\n")
+            print("1. Edit/View accinfo.ini file\n2. Delete accinfo.ini (Requires exit)\n")
 
             print("\n0. Exit\n")
             devtoolsChoice = str(input(": "))
@@ -352,6 +352,10 @@ class Apps:
             if devtoolsChoice == "1":
                 clearTerm()
                 Apps.configEditor(True)
+
+            elif devtoolsChoice == "2":
+                clearTerm()
+                Apps.configDeletion()
                 
             elif devtoolsChoice == "0":
                 inUse = False
@@ -377,10 +381,7 @@ class Apps:
                 print("username = " + config["user"]["username"])
 
                 if devtoolsEncoding == False:
-                    passcode = config["user"]["password"]
-                    passcode = base64.b64decode(passcode)
-                    passcode = passcode.decode("utf-8")
-                    print("password = " + str(passcode) + " # Decoded from Base64. Saved in Base64.")
+                    print("password = " + str(decode64(config["user"]["password"])) + " # Decoded from Base64. Saved in Base64.")
 
                 else:
                     print("password = " + config["user"]["password"] + " # Encoded in Base64. What is actually saved.")
@@ -399,7 +400,7 @@ class Apps:
                     print("Config File (accinfo.ini):\n")
                     print("[version]")
                     print("versionnum = " + config["version"]["versionnum"])
-                    print("\n---------------------------")
+                    drawLine()
                     print("\n1. Edit versionnum\n\n0. Back\n")
                     devtoolsChoice = str(input(": "))
 
@@ -431,15 +432,12 @@ class Apps:
                     print("[user]")
                     print("username = " + config["user"]["username"])
                     if devtoolsEncoding == False:
-                        passcode = config["user"]["password"]
-                        passcode = base64.b64decode(passcode)
-                        passcode = passcode.decode("utf-8")
-                        print("password = " + str(passcode) + " # Decoded from Base64. Saved in Base64.")
+                        print("password = " + str(decode64(config["user"]["password"])) + " # Decoded from Base64. Saved in Base64.")
 
                     else:
                         print("password = " + config["user"]["password"] + " # Encoded in Base64. What is actually saved.")
 
-                    print("\n---------------------------")
+                    drawLine()
                     print("\n1. Edit username\n2. Edit password\n\n0. Back\n")
                     devtoolsChoice = str(input(": "))
 
@@ -481,7 +479,7 @@ class Apps:
                         clearTerm()
 
                         print("\nConfig File (accinfo.ini):\n")
-                        print("CURRENTLY: password = " + config["user"]["password"])
+                        print("CURRENTLY: password = " + config["user"]["password"] + " # Decoded = " + str(decode64(config["user"]["password"])))
                         devtoolsChoice = str(input("\n\nCHANGE TO: password = "))
 
                         if devtoolsEncodedPass == True:
@@ -503,6 +501,29 @@ class Apps:
                         print("\nInvalid Choice")
 
                         time.sleep(1.5)
+
+                elif devtoolsChoice == "3":
+
+                    clearTerm()
+
+                    print("Config File (accinfo.ini):\n")
+                    print("[devtools]")
+                    print("enabled = " + config["devtools"]["enabled"])
+                    drawLine()
+                    print("\n1. Edit enabled\n\n0. Back\n")
+                    devtoolsChoice = str(input(": "))
+
+                    if devtoolsChoice == "1":
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: enabled = " + config["devtools"]["enabled"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: enabled = "))
+
+                        config.set("devtools", "enabled", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
 
                 elif devtoolsChoice == "0":
                     devtoolsEdit = False
@@ -545,7 +566,28 @@ class Apps:
             
             time.sleep(1.5)
 
-            
+    def configDeletion():
+        
+        print("*WARNING*")
+        drawLine()
+        print("\nThis will delete your \"accinfo.ini\" file.")
+        print("Are you SURE you want to DELETE it PERMANENTLY? (y/N)")
+        print("\n(AppOS will exit shortly after.)\n")
+        devtoolsChoice = input(": ")
+
+        if devtoolsChoice.lower() == "y":
+            os.remove("./accinfo.ini")
+            print("accinfo.ini deleted. Exiting AppOS.")
+            time.sleep(2)
+
+            exit()
+
+        else:
+            print("\n\n Cancelling.")
+
+            time.sleep(1.5)
+            pass
+
 
             
 
@@ -560,6 +602,7 @@ def welcome():
            |_|     |_|              """)
     print("But it's not an OS?")
     print("Version " + str(__version__))
+    drawLine()
 
 
 # Clears the terminal on both Windows and Linux systems.
@@ -572,6 +615,16 @@ def drawLine():
     term_size = os.get_terminal_size()
     print('_' * term_size.columns)
 
+
+# Encodes input in Base64
+def decode64(text):
+    try:
+        decodeVar = text
+        decodeVar = base64.b64decode(decodeVar)
+        decodeVar = decodeVar.decode("utf-8")
+        return decodeVar
+    except:
+        return text
 
 
 # Calls Pre.update() for update check and then Pre.setupChecker() to check for the accinfo.ini file.
