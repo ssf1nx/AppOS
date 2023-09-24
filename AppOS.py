@@ -22,54 +22,66 @@ class Pre:
 
         clearTerm()
         try:
-
-            # Online check.
-            if localOnly != True:
-                online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
-
-                try:
-                    if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
-                        onlineVer = onlineVer.group(1)
-
-                    try:
-                        if onlineVer != __version__:
-                            print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
-                            print("Current version: " + __version__)
-
-                        elif onlineVer == __version__:
-                            print("Latest Version\n")
-
-                        else:
-                            print("Version identifier corrupted or missing. Please redownload.")
-
-                    except:
-                        print("This file has no version identifier.")
-
-                except:
-                    print("No version identifier on online file, please create issue.")
-
-            # Local check (dependent on localOnly var).
-            else:
-                try:
-                    # Checks for LatestVerTest.py file to check its __version__.
-                    import LatestVerTest as onlineVer
-                    onlineVer = str(onlineVer.__version__)
-
-                    try:
-                        if onlineVer != __version__:
-                            print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
-                            print("Current version: " + __version__)
-
-                        elif onlineVer == __version__:
-                            print("Latest Version\n")
-
-                    except:
-                        print("This file has no version identifier.")
-                except:
-                    print("Invalid or missing local version file.")
+            autoUpdate = config["general"]["autoupdate"]
         except:
-            print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
-        input("Enter to continue...")
+            autoUpdate = "True"
+
+        if autoUpdate == "True": 
+            print("Auto-Update Check Enabled.")
+            print("Initializing Update Check...\n")
+
+            try:
+
+                # Online check.
+                if localOnly != True:
+                    online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
+
+                    try:
+                        if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
+                            onlineVer = onlineVer.group(1)
+
+                        try:
+                            if onlineVer != __version__:
+                                print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
+                                print("Current version: " + __version__)
+
+                            elif onlineVer == __version__:
+                                print("Latest Version\n")
+
+                            else:
+                                print("Version identifier corrupted or missing. Please redownload.")
+
+                        except:
+                            print("This file has no version identifier.")
+
+                    except:
+                        print("No version identifier on online file, please create issue.")
+
+                # Local check (dependent on localOnly var).
+                else:
+                    try:
+                        # Checks for LatestVerTest.py file to check its __version__.
+                        import LatestVerTest as onlineVer
+                        onlineVer = str(onlineVer.__version__)
+
+                        try:
+                            if onlineVer != __version__:
+                                print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
+                                print("Current version: " + __version__)
+
+                            elif onlineVer == __version__:
+                                print("Latest Version\n")
+
+                        except:
+                            print("This file has no version identifier.")
+                    except:
+                        print("Invalid or missing local version file.")
+            except:
+                print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
+            input("Enter to continue...")
+        
+        else:
+            print("Auto-Update Check Disabled.")
 
 
     # Used to create user profile and to create the initial accinfo.ini file.
@@ -88,6 +100,8 @@ class Pre:
         config.set("user", "password", Pre.passwordCreation(False))
         config.add_section("devtools")
         config.set("devtools", "enabled", "False")
+        config.add_section("general")
+        config.set("general", "autoupdate", "True")
         
         # Writes (and creates) to accinfo.ini file.
         with open("accinfo.ini", "w") as configfile:
@@ -236,7 +250,7 @@ class Apps:
             clearTerm()
 
             print("Please Choose an Option")
-            print("\n1. Change your username\n2. Change your password")
+            print("\n1. Change your username\n2. Change your password\n3. Toggle auto-update check")
             print("\n\n#. Credits\n\n0. Exit\n")
 
             devtoolsBoolean = config["devtools"]["enabled"]
@@ -296,6 +310,35 @@ class Apps:
                 else:
                     print("\nInvalid Password")
 
+                    time.sleep(1.5)
+
+            # Toggle the auto-update check at startup.
+            elif settingsChoice == "3":
+                clearTerm()
+                autoUpdate = config["general"]["autoupdate"]
+                if autoUpdate == "True":
+                    autoUpdateState = "Enabled"
+                else:
+                    autoUpdateState = "Disabled"
+
+                print("Toggle the auto-update check at startup? (y/N)")
+                print("CURRENTLY: " + autoUpdateState + ".\n\n")
+                autoUpdateResp = input(": ")
+
+                if autoUpdateResp.lower() == "y":
+                    if autoUpdate == "True":
+                        config.set("general", "autoupdate", "False")
+                        autoUpdateState = "Disabled"
+                    else:
+                        config.set("general", "autoupdate", "True")
+                        autoUpdateState = "Enabled"
+                    with open(file, "w") as configfile:
+                        config.write(configfile)
+                    print("\n\nAuto Update " + autoUpdateState + ".")
+                    time.sleep(1.5)
+
+                else:
+                    print("\n\nCancelled.")
                     time.sleep(1.5)
 
             # Very simple credits screen.
@@ -383,7 +426,6 @@ class Apps:
                 print("versionnum = " + config["version"]["versionnum"] + " # Only changes the version of the accinfo.ini file.")
                 print("\n[user]")
                 print("username = " + config["user"]["username"])
-
                 if devtoolsEncoding == False:
                     print("password = " + str(decode64(config["user"]["password"])) + " # Decoded from Base64. Saved in Base64.")
 
@@ -392,8 +434,10 @@ class Apps:
 
                 print("\n[devtools]")
                 print("enabled = " + config["devtools"]["enabled"])
+                print("\n[general]")
+                print("autoupdate = " + config["general"]["autoupdate"])
                 drawLine()
-                print("\n1. Edit [version]\n2. Edit [user]\n3. Edit [devtools]\n\n0. Cancel\n")
+                print("\n1. Edit [version]\n2. Edit [user]\n3. Edit [devtools]\n4. Edit [general]\n\n0. Cancel\n")
                 print("#. Toggle Base64 encoding\n")
                 devtoolsChoice = str(input(": "))
 
@@ -496,7 +540,6 @@ class Apps:
                         config.set("user", "password", devtoolsChoice)
                         with open(file, "w") as configfile:
                             config.write(configfile)
-                    
 
                     elif devtoolsChoice == "0":
                         pass
@@ -526,6 +569,29 @@ class Apps:
                         devtoolsChoice = str(input("\n\nCHANGE TO: enabled = "))
 
                         config.set("devtools", "enabled", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+
+                elif devtoolsChoice == "4":
+
+                    clearTerm()
+
+                    print("Config File (accinfo.ini):\n")
+                    print("[general]")
+                    print("autoupdate = " + config["general"]["autoupdate"])
+                    drawLine()
+                    print("\n1. Edit autoupdate\n\n0. Back\n")
+                    devtoolsChoice = str(input(": "))
+
+                    if devtoolsChoice == "1":
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: autoupdate = " + config["general"]["autoupdate"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: autoupdate = "))
+
+                        config.set("general", "autoupdate", devtoolsChoice)
                         with open(file, "w") as configfile:
                             config.write(configfile)
 
