@@ -252,8 +252,10 @@ class Apps:
             print("Please Choose an Option")
             print("\n1. Change your username\n2. Change your password\n3. Toggle auto-update check")
             print("\n\n#. Credits\n\n0. Exit\n")
-
-            devtoolsBoolean = config["devtools"]["enabled"]
+            try:
+                devtoolsBoolean = config["devtools"]["enabled"]
+            except:
+                devtoolsBoolean = "False"
             if devtoolsBoolean == "True":
                 print("\n\n~. DevTools Access\n")
 
