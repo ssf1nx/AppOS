@@ -3,7 +3,8 @@ import re
 import time
 import urllib.request as urllib
 import getpass
-import base64
+import secrets
+import hashlib
 from configparser import ConfigParser
 
 # localOnly is used for debugging version checker.
@@ -84,8 +85,10 @@ class Pre:
         config.set("version", "versionNum", __version__)
         config.add_section("user")
         config.set("user", "username", username)
-        # Calls the Pre.passwordCreation() function and returns encoded password.
-        config.set("user", "password", Pre.passwordCreation(False))
+        # Calls the Pre.passwordCreation() function and returns hashed input password and salt.
+        passInfo = Pre.passwordCreation(False)
+        config.set("user", "passhash", passInfo[0])
+        config.set("user", "salt", passInfo[1])
         
         # Writes (and creates) to accinfo.ini file.
         with open("accinfo.ini", "w") as configfile:
@@ -101,16 +104,18 @@ class Pre:
 
         while passCreated != True:
             print("Please enter a password.")
-            pass1 = getpass.getpass(prompt=": ")
+            inputPassCheck1 = getpass.getpass(prompt=": ")
             print("\nPlease re-enter your password.")
-            pass2 = getpass.getpass(prompt=": ")
+            inputPassCheck2 = getpass.getpass(prompt=": ")
 
-            if pass1 == pass2:
+            if inputPassCheck1 == inputPassCheck2:
 
-                # Encodes the password in Base64 (I know it isn't encryption).
-                pass1 = base64.b64encode(bytes(pass2, 'utf-8'))
-                pass2 = pass1.decode('utf-8')
-                return pass2
+                # Generates a salt and hashes the pass with it.
+                generatedSalt = secrets.token_hex(8)
+                saltedPass = inputPassCheck2.join(generatedSalt)
+                hashedPass = hashlib.new('SHA256')
+                hashedPass.update(bytes(saltedPass, 'utf-8'))
+                return hashedPass.hexdigest(), generatedSalt
                 passCreated = True
 
             else:
@@ -169,7 +174,8 @@ class Main:
         global name
         global pass1
         name = config["user"]["username"]
-        pass1 = config["user"]["password"]
+        storedHash = config["user"]["passhash"]
+        storedSalt = config["user"]["salt"]
         userChoice = False
 
         while userChoice == False:
@@ -189,13 +195,15 @@ class Main:
 
                 print("\nEnter Password:")
 
-                # Encodes the password the user inputs so that it is comparable to the stored password.
-                password = getpass.getpass(prompt=": ")
-                password = base64.b64encode(bytes(password, 'utf-8'))
-                password = password.decode('utf-8')
+                # Hashes the password the user inputs with the stored salt so that it is comparable to the stored hash.
+                inputPass = getpass.getpass(prompt=": ")
+                saltedInputPass = inputPass.join(storedSalt)
+                hashedPass = hashlib.new("sha256")
+                hashedPass.update(bytes(saltedInputPass, 'utf-8'))
+                hashedPass = hashedPass.hexdigest()
 
                 # Compares the password user inputted versus the stored one. If it's the same, it calls Main.appMeny(False).
-                if password == pass1:
+                if hashedPass == storedHash:
                     Main.appMenu(False)
 
                 else:
@@ -228,8 +236,6 @@ class Apps:
 
         clearTerm()
 
-        pass1 = config["user"]["password"]
-
         while settings == True:
             clearTerm()
 
@@ -257,22 +263,27 @@ class Apps:
             # Used for changing the user's password.
             elif settingsChoice == "2":
 
-                pass1 = config["user"]["password"]
+                storedHash = config["user"]["passhash"]
+                storedSalt = config["user"]["salt"]
 
                 clearTerm()
 
                 # Has user input their current password before changing it.
                 print("Please Enter Your Current Password")
 
-                # Encodes user inputted password to Base64 for comparison.
-                verifyPass = getpass.getpass(prompt=": ")
-                verifyPass = base64.b64encode(bytes(verifyPass, 'utf-8'))
-                verifyPass = verifyPass.decode('utf-8')
+                # Hashes user inputted password with the stored salt for comparison.
+                inputPass = getpass.getpass(prompt=": ")
+                saltedInputPass = inputPass.join(storedSalt)
+                hashedPass = hashlib.new("sha256")
+                hashedPass.update(bytes(saltedInputPass, 'utf-8'))
+                hashedPass = hashedPass.hexdigest()
                 
                 # Compares the inputted password to the stored password. If the same, then allow change of password.
-                if verifyPass == pass1:
-                    # Calls Pre.passwordCreation() and returns the new password.
-                    config.set("user", "password", Pre.passwordCreation(False))
+                if hashedPass == storedHash:
+                    # Calls Pre.passwordCreation() and returns the new hashed password and salt.
+                    passInfo = Pre.passwordCreation(False)
+                    config.set("user", "passhash", passInfo[0])
+                    config.set("user", "salt", passInfo[1])
 
                     # Writes new passcode to accinfo.ini.
                     with open(file, "w") as configfile:
