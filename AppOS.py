@@ -41,11 +41,16 @@ class Pre:
                             onlineVer = onlineVer.group(1)
 
                         try:
-                            if onlineVer != __version__:
+                            # Converts the version numbers to tuples to compare.
+                            onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
+                            localVerTuple = tuple(map(int, (__version__.split("."))))
+
+                            if onlineVerTuple > localVerTuple:
                                 print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
                                 print("Current version: " + __version__)
+                                input("Enter to continue...")
 
-                            elif onlineVer == __version__:
+                            elif onlineVerTuple == localVerTuple:
                                 print("Latest Version\n")
 
                             else:
@@ -65,11 +70,16 @@ class Pre:
                         onlineVer = str(onlineVer.__version__)
 
                         try:
-                            if onlineVer != __version__:
+                            # Converts the version numbers to tuples to compare.
+                            onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
+                            localVerTuple = tuple(map(int, (__version__.split("."))))
+
+                            if onlineVerTuple > localVerTuple:
                                 print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
                                 print("Current version: " + __version__)
+                                input("Enter to continue...")
 
-                            elif onlineVer == __version__:
+                            elif onlineVerTuple == localVerTuple:
                                 print("Latest Version\n")
 
                         except:
