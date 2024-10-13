@@ -8,13 +8,11 @@ import hashlib
 import base64
 from configparser import ConfigParser
 
-# localOnly is used for debugging version checker.
-localOnly = False
 config = ConfigParser()
 file = "accinfo.ini"
 
 # Version (duh).
-__version__ = "2.0.1"
+__version__ = "2.1.0"
 
 # Start-up type function.
 class Pre:
@@ -24,54 +22,85 @@ class Pre:
 
         clearTerm()
         try:
-
-            # Online check.
-            if localOnly != True:
-                online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
-
-                try:
-                    if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
-                        onlineVer = onlineVer.group(1)
-
-                    try:
-                        if onlineVer != __version__:
-                            print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
-                            print("Current version: " + __version__)
-                            input("Enter to continue...")
-
-                        elif onlineVer == __version__:
-                            print("Latest Version\n")
-
-                        else:
-                            print("Version identifier corrupted or missing. Please redownload.")
-
-                    except:
-                        print("This file has no version identifier.")
-
-                except:
-                    print("No version identifier on online file, please create issue.")
-
-            # Local check (dependent on localOnly var).
-            else:
-                try:
-                    # Checks for LatestVerTest.py file to check its __version__.
-                    import LatestVerTest as onlineVer
-                    onlineVer = str(onlineVer.__version__)
-
-                    try:
-                        if onlineVer != __version__:
-                            print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
-                            print("Current version: " + __version__)
-
-                        elif onlineVer == __version__:
-                            print("Latest Version\n")
-
-                    except:
-                        print("This file has no version identifier.")
-                except:
-                    print("Invalid or missing local version file.")
+            autoUpdate = config["general"]["autoupdate"]
         except:
-            print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
+            autoUpdate = "True"
+
+        if autoUpdate == "True": 
+            print("Auto-Update Check Enabled.")
+            print("Initializing Update Check...\n")
+
+            # Checks config for localVerTest. Must be added manually.
+            # Used to test update function without going online.
+            # Will pull "online" version number from local config instead.
+            # HOW TO USE:
+            # Add "localVerTest = True" under "version" section in accinfo.ini.
+            # Add "localVerNum = x.x.x" under "version" section in accinfo.ini.
+            # Replace x.x.x with "online" version number you want to simulate.
+            try: 
+                localOnly = config["version"]["localVerTest"]
+            except:
+                localOnly = False
+
+            # Tries to check for updates based on current file version.
+            try:
+                # Online check if localOnly is disabled.
+                if localOnly == False:
+
+                    # Grabs the latest file from Github.
+                    online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
+
+                    # Tries to search the grabbed file for a __version__ for later comparison to local version.
+                    try:
+                        if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
+                            onlineVer = onlineVer.group(1)
+
+                    except:
+                        print("No version identifier on online file, please create issue.")
+
+                # Offline check if localOnly isn't disabled.
+                else:
+
+                    # Tries to grab the variable localVerNum from config.
+                    try:
+                        onlineVer = config["version"]["localVerNum"]
+
+                    except:
+                        print("No version identifier on online file, please create issue.")
+
+                # Tries to convert the version numbers to tuple variables for comparison and compares them.
+                try:
+                    # Converts the version numbers to tuples to compare.
+                    onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
+                    localVerTuple = tuple(map(int, (__version__.split("."))))
+
+                    if onlineVerTuple > localVerTuple:
+                        print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
+                        print("Current version: " + __version__)
+                        input("Enter to continue...")
+
+                    elif onlineVerTuple < localVerTuple:
+                        print("Local version is newer than online version. Proceed with caution.")
+                        input("Enter to continue...")
+
+                    elif onlineVerTuple == localVerTuple:
+                        print("Latest Version\n")
+
+                    # Version number on online or local files is not equal, less than, or greater than one another.
+                    else:
+                        print("Version identifier corrupted or missing. Please redownload.")
+                        input("Enter to continue...")
+
+                except:
+                    print("This file has no version identifier.")
+                    input("Enter to continue...")
+                    
+            except:
+                print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
+                input("Enter to continue...")
+        
+        else:
+            print("Auto-Update Check Disabled.")
 
 
     # Updates the accinfo.ini when it's outdated.
@@ -131,6 +160,10 @@ class Pre:
         passInfo = Pre.passwordCreation(False)
         config.set("user", "passhash", passInfo[0])
         config.set("user", "salt", passInfo[1])
+        config.add_section("devtools")
+        config.set("devtools", "enabled", "False")
+        config.add_section("general")
+        config.set("general", "autoupdate", "True")
         
         # Writes (and creates) to accinfo.ini file.
         with open("accinfo.ini", "w") as configfile:
@@ -203,7 +236,7 @@ class Main:
             app = str(input(": "))
 
             if app == "0":
-                Apps.options(True)
+                Apps.settings(True)
 
             elif app == "#":
                 userChoice = False
@@ -231,7 +264,7 @@ class Main:
             clearTerm()
             welcome()
 
-            print("\n\nWelcome,\n\n") 
+            print("\nWelcome,\n\n") 
             print("Please Choose Your User.\n\n")
             print("1. " + name + "\n\n0. Exit\n")
             userinput = input(": ")
@@ -281,16 +314,25 @@ class Main:
 class Apps:
 
     # Settings app. Allows for password and username changes. 
-    def options(settings):
+    def settings(inUse):
 
         clearTerm()
 
-        while settings == True:
+        while inUse == True:
+            
+
             clearTerm()
 
             print("Please Choose an Option")
-            print("\n1. Change your username\n2. Change your password")
+            print("\n1. Change your username\n2. Change your password\n3. Toggle auto-update check")
             print("\n\n#. Credits\n\n0. Exit\n")
+            try:
+                devtoolsBoolean = config["devtools"]["enabled"]
+            except:
+                devtoolsBoolean = "False"
+            if devtoolsBoolean == "True":
+                print("\n\n~. DevTools Access\n")
+
             settingsChoice = input(": ")
 
             # Used for changing the user's username.
@@ -342,9 +384,42 @@ class Apps:
 
                     time.sleep(1.5)
 
+                    # Signs out the user after reset (check issue 3).
+                    inUse = False
+                    Main.signIn()
+
                 else:
                     print("\nInvalid Password")
 
+                    time.sleep(1.5)
+
+            # Toggle the auto-update check at startup.
+            elif settingsChoice == "3":
+                clearTerm()
+                autoUpdate = config["general"]["autoupdate"]
+                if autoUpdate == "True":
+                    autoUpdateState = "Enabled"
+                else:
+                    autoUpdateState = "Disabled"
+
+                print("Toggle the auto-update check at startup? (y/N)")
+                print("CURRENTLY: " + autoUpdateState + ".\n\n")
+                autoUpdateResp = input(": ")
+
+                if autoUpdateResp.lower() == "y":
+                    if autoUpdate == "True":
+                        config.set("general", "autoupdate", "False")
+                        autoUpdateState = "Disabled"
+                    else:
+                        config.set("general", "autoupdate", "True")
+                        autoUpdateState = "Enabled"
+                    with open(file, "w") as configfile:
+                        config.write(configfile)
+                    print("\n\nAuto Update " + autoUpdateState + ".")
+                    time.sleep(1.5)
+
+                else:
+                    print("\n\nCancelled.")
                     time.sleep(1.5)
 
             # Very simple credits screen.
@@ -356,9 +431,30 @@ class Apps:
 
                 clearTerm()
 
+            # "Developer" tools to edit the accinfo.ini file, possibly among other things in future updates.
+            elif settingsChoice == "~":
+                clearTerm()
+
+                devtoolsBoolean = config["devtools"]["enabled"]
+
+                if devtoolsBoolean == "False":
+                    print("Would you like to enable DevTools? (y/N)")
+                    devtoolResp = input(": ")
+                    if devtoolResp.lower() == "y":
+                        config.set("devtools", "enabled", "True")
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+                        print("\n\nDevTools enabled.")
+                        time.sleep(1.5)
+                    else:
+                        print("\n\nCancelled.")
+                        time.sleep(1.5)
+                else:
+                    Apps.devtools(True)
+
             # Exits the settings app back to the App Menu.
             elif settingsChoice == "0":
-                settings = False
+                inUse = False
                 appValid = False
 
             else:
@@ -366,6 +462,285 @@ class Apps:
 
                 time.sleep(1.5)
 
+    # DevTools app. Allows changes of the accinfo.ini file.
+    def devtools(inUse):
+
+        while inUse == True:
+            clearTerm()
+
+            config.read(file)
+
+            print("DevTools Version 1.0:\n\n")
+            print("1. Edit/View accinfo.ini file\n2. Delete accinfo.ini (Requires exit)\n")
+
+            print("\n0. Exit\n")
+            devtoolsChoice = str(input(": "))
+
+            
+            if devtoolsChoice == "1":
+                clearTerm()
+                Apps.configEditor(True)
+
+            elif devtoolsChoice == "2":
+                clearTerm()
+                Apps.configDeletion()
+                
+            elif devtoolsChoice == "0":
+                inUse = False
+            else:
+                print("\nInvalid Choice")
+
+                time.sleep(0.5)
+
+    def configEditor(devtoolsEdit):
+
+        try:
+
+            devtoolsEncoding = True
+
+            while devtoolsEdit == True:
+
+                clearTerm()
+
+                print("Config File (accinfo.ini):\n")
+                print("[version]")
+                print("versionnum = " + config["version"]["versionnum"] + " # Only changes the version of the accinfo.ini file.")
+                print("\n[user]")
+                print("username = " + config["user"]["username"])
+                if devtoolsEncoding == False:
+                    print("password = " + str(decode64(config["user"]["password"])) + " # Decoded from Base64. Saved in Base64.")
+
+                else:
+                    print("password = " + config["user"]["password"] + " # Encoded in Base64. What is actually saved.")
+
+                print("\n[devtools]")
+                print("enabled = " + config["devtools"]["enabled"])
+                print("\n[general]")
+                print("autoupdate = " + config["general"]["autoupdate"])
+                drawLine()
+                print("\n1. Edit [version]\n2. Edit [user]\n3. Edit [devtools]\n4. Edit [general]\n\n0. Cancel\n")
+                print("#. Toggle Base64 encoding\n")
+                devtoolsChoice = str(input(": "))
+
+                if devtoolsChoice == "1":
+
+                    clearTerm()
+
+                    print("Config File (accinfo.ini):\n")
+                    print("[version]")
+                    print("versionnum = " + config["version"]["versionnum"])
+                    drawLine()
+                    print("\n1. Edit versionnum\n\n0. Back\n")
+                    devtoolsChoice = str(input(": "))
+
+                    if devtoolsChoice == "1":
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: versionnum = " + config["version"]["versionnum"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: versionnum = "))
+
+                        config.set("version", "versionnum", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+
+                    elif devtoolsChoice == "0":
+                        pass
+
+                    else:
+                        print("\nInvalid Choice")
+
+                        time.sleep(1.5)
+
+                elif devtoolsChoice == "2":
+
+                    clearTerm()
+
+                    print("Config File (accinfo.ini):\n")
+                    print("[user]")
+                    print("username = " + config["user"]["username"])
+                    if devtoolsEncoding == False:
+                        print("password = " + str(decode64(config["user"]["password"])) + " # Decoded from Base64. Saved in Base64.")
+
+                    else:
+                        print("password = " + config["user"]["password"] + " # Encoded in Base64. What is actually saved.")
+
+                    drawLine()
+                    print("\n1. Edit username\n2. Edit password\n\n0. Back\n")
+                    devtoolsChoice = str(input(": "))
+
+                    if devtoolsChoice == "1":
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: username = " + config["user"]["username"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: username = "))
+
+                        config.set("user", "username", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+
+                    elif devtoolsChoice == "2":
+
+                        clearTerm()
+
+                        print("Would you like to auto-encode (recommended) your input into Base64? (Y/n)\nOtherwise your raw input is saved.\n\n(Saving a non-Base64 input then trying to login with it will not work.)\n\n")
+                        devtoolsChoice = input(": ")
+                        
+                        if devtoolsChoice.lower() == "n":
+                            devtoolsEncodedPass = False
+                            print("\nAuto-encode has been disabled.")
+
+                            time.sleep(1.5)
+
+                            pass
+
+                        else:
+                            devtoolsEncodedPass = True
+                            print("\nAuto-encode has been enabled.")
+
+                            time.sleep(1.5)
+
+                            pass
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: password = " + config["user"]["password"] + " # Decoded = " + str(decode64(config["user"]["password"])))
+                        devtoolsChoice = str(input("\n\nCHANGE TO: password = "))
+
+                        if devtoolsEncodedPass == True:
+                            devtoolsChoice = base64.b64encode(bytes(devtoolsChoice, "utf-8"))
+                            devtoolsChoice = devtoolsChoice.decode("utf-8")
+
+                        elif devtoolsEncodedPass == False:
+                            pass
+
+                        config.set("user", "password", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+
+                    elif devtoolsChoice == "0":
+                        pass
+
+                    else:
+                        print("\nInvalid Choice")
+
+                        time.sleep(1.5)
+
+                elif devtoolsChoice == "3":
+
+                    clearTerm()
+
+                    print("Config File (accinfo.ini):\n")
+                    print("[devtools]")
+                    print("enabled = " + config["devtools"]["enabled"])
+                    drawLine()
+                    print("\n1. Edit enabled\n\n0. Back\n")
+                    devtoolsChoice = str(input(": "))
+
+                    if devtoolsChoice == "1":
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: enabled = " + config["devtools"]["enabled"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: enabled = "))
+
+                        config.set("devtools", "enabled", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+
+                elif devtoolsChoice == "4":
+
+                    clearTerm()
+
+                    print("Config File (accinfo.ini):\n")
+                    print("[general]")
+                    print("autoupdate = " + config["general"]["autoupdate"])
+                    drawLine()
+                    print("\n1. Edit autoupdate\n\n0. Back\n")
+                    devtoolsChoice = str(input(": "))
+
+                    if devtoolsChoice == "1":
+
+                        clearTerm()
+
+                        print("\nConfig File (accinfo.ini):\n")
+                        print("CURRENTLY: autoupdate = " + config["general"]["autoupdate"])
+                        devtoolsChoice = str(input("\n\nCHANGE TO: autoupdate = "))
+
+                        config.set("general", "autoupdate", devtoolsChoice)
+                        with open(file, "w") as configfile:
+                            config.write(configfile)
+
+                elif devtoolsChoice == "0":
+                    devtoolsEdit = False
+
+                elif devtoolsChoice == "#":
+
+                    clearTerm()
+
+                    print("Are you sure you want to toggle? (y/N)\nThis will reveal/hide (decode/encode) your password while in DevTools this session, but WON'T change how it is saved in the accinfo.ini file.\n\n")
+                    devtoolsChoice = input(": ")
+                    
+                    if devtoolsChoice.lower() == "y":
+                        if devtoolsEncoding == True:
+                            print("\nToggling OFF (decoding)")
+                            devtoolsEncoding = False
+                            
+                            time.sleep(1.5)
+
+                        elif devtoolsEncoding == False:
+                            print("\nToggling ON (encoding)")
+                            devtoolsEncoding = True
+
+                            time.sleep(1.5)
+
+                    else:
+                        print("\nCancelling.")
+                        time.sleep(1.5)
+
+                else:
+                    print("\nInvalid Choice")
+
+                    time.sleep(1.5)
+
+        except:
+
+            clearTerm()
+            print("An error has occcured, cancelling.")
+
+            devtoolsEdit = False
+            
+            time.sleep(1.5)
+
+    def configDeletion():
+        
+        print("*WARNING*")
+        drawLine()
+        print("\nThis will delete your \"accinfo.ini\" file.")
+        print("Are you SURE you want to DELETE it PERMANENTLY? (y/N)")
+        print("\n(AppOS will exit shortly after.)\n")
+        devtoolsChoice = input(": ")
+
+        if devtoolsChoice.lower() == "y":
+            os.remove("./accinfo.ini")
+            print("accinfo.ini deleted. Exiting AppOS.")
+            time.sleep(2)
+
+            exit()
+
+        else:
+            print("\n\n Cancelling.")
+
+            time.sleep(1.5)
+            pass
+
+
+            
 
 
 # AppOS title, subtitle, and version display.
@@ -378,12 +753,29 @@ def welcome():
            |_|     |_|              """)
     print("But it's not an OS?")
     print("Version " + str(__version__))
+    drawLine()
 
 
 # Clears the terminal on both Windows and Linux systems.
 def clearTerm():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+
+# Prints a line in the terminal.
+def drawLine():
+    term_size = os.get_terminal_size()
+    print('_' * term_size.columns)
+
+
+# Encodes input in Base64
+def decode64(text):
+    try:
+        decodeVar = text
+        decodeVar = base64.b64decode(decodeVar)
+        decodeVar = decodeVar.decode("utf-8")
+        return decodeVar
+    except:
+        return text
 
 
 # Calls Pre.update() for update check and then Pre.setupChecker() to check for the accinfo.ini file.
