@@ -6,8 +6,6 @@ import getpass
 import base64
 from configparser import ConfigParser
 
-# localOnly is used for debugging version checker.
-localOnly = False
 config = ConfigParser()
 file = "accinfo.ini"
 
@@ -30,65 +28,74 @@ class Pre:
             print("Auto-Update Check Enabled.")
             print("Initializing Update Check...\n")
 
-            try:
+            # Checks config for localVerTest. Must be added manually.
+            # Used to test update function without going online.
+            # Will pull "online" version number from local config instead.
+            # HOW TO USE:
+            # Add "localVerTest = True" under "version" section in accinfo.ini.
+            # Add "localVerNum = x.x.x" under "version" section in accinfo.ini.
+            # Replace x.x.x with "online" version number you want to simulate.
+            try: 
+                localOnly = config["version"]["localVerTest"]
+            except:
+                localOnly = False
 
-                # Online check.
-                if localOnly != True:
+            # Tries to check for updates based on current file version.
+            try:
+                # Online check if localOnly is disabled.
+                if localOnly == False:
+
+                    # Grabs the latest file from Github.
                     online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
 
+                    # Tries to search the grabbed file for a __version__ for later comparison to local version.
                     try:
                         if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
                             onlineVer = onlineVer.group(1)
 
-                        try:
-                            # Converts the version numbers to tuples to compare.
-                            onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
-                            localVerTuple = tuple(map(int, (__version__.split("."))))
+                    except:
+                        print("No version identifier on online file, please create issue.")
 
-                            if onlineVerTuple > localVerTuple:
-                                print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
-                                print("Current version: " + __version__)
-                                input("Enter to continue...")
+                # Offline check if localOnly isn't disabled.
+                else:
 
-                            elif onlineVerTuple == localVerTuple:
-                                print("Latest Version\n")
-
-                            else:
-                                print("Version identifier corrupted or missing. Please redownload.")
-
-                        except:
-                            print("This file has no version identifier.")
+                    # Tries to grab the variable localVerNum from config.
+                    try:
+                        onlineVer = config["version"]["localVerNum"]
 
                     except:
                         print("No version identifier on online file, please create issue.")
 
-                # Local check (dependent on localOnly var).
-                else:
-                    try:
-                        # Checks for LatestVerTest.py file to check its __version__.
-                        import LatestVerTest as onlineVer
-                        onlineVer = str(onlineVer.__version__)
+                # Tries to convert the version numbers to tuple variables for comparison and compares them.
+                try:
+                    # Converts the version numbers to tuples to compare.
+                    onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
+                    localVerTuple = tuple(map(int, (__version__.split("."))))
 
-                        try:
-                            # Converts the version numbers to tuples to compare.
-                            onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
-                            localVerTuple = tuple(map(int, (__version__.split("."))))
+                    if onlineVerTuple > localVerTuple:
+                        print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
+                        print("Current version: " + __version__)
+                        input("Enter to continue...")
 
-                            if onlineVerTuple > localVerTuple:
-                                print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
-                                print("Current version: " + __version__)
-                                input("Enter to continue...")
+                    elif onlineVerTuple < localVerTuple:
+                        print("Local version is newer than online version. Proceed with caution.")
+                        input("Enter to continue...")
 
-                            elif onlineVerTuple == localVerTuple:
-                                print("Latest Version\n")
+                    elif onlineVerTuple == localVerTuple:
+                        print("Latest Version\n")
 
-                        except:
-                            print("This file has no version identifier.")
-                    except:
-                        print("Invalid or missing local version file.")
+                    # Version number on online or local files is not equal, less than, or greater than one another.
+                    else:
+                        print("Version identifier corrupted or missing. Please redownload.")
+                        input("Enter to continue...")
+
+                except:
+                    print("This file has no version identifier.")
+                    input("Enter to continue...")
+                    
             except:
                 print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
-            input("Enter to continue...")
+                input("Enter to continue...")
         
         else:
             print("Auto-Update Check Disabled.")
