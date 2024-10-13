@@ -5,6 +5,7 @@ import urllib.request as urllib
 import getpass
 import secrets
 import hashlib
+import base64
 from configparser import ConfigParser
 
 # localOnly is used for debugging version checker.
@@ -13,7 +14,7 @@ config = ConfigParser()
 file = "accinfo.ini"
 
 # Version (duh).
-__version__ = "2.0.0"
+__version__ = "2.0.1"
 
 # Start-up type function.
 class Pre:
@@ -73,6 +74,47 @@ class Pre:
             print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
 
 
+    # Updates the accinfo.ini when it's outdated.
+    def updateConfig(configVer):
+
+        # If the config's version is 2.0.0 (last version), then upgrade it like this.
+        if configVer == (2, 0, 0):
+            
+            # Grabs the Base64 Encoded password from the config.
+            oldEncodedPass = config["user"]["password"]
+
+            # Decodes it.
+            oldDecodedPass = base64.b64decode(bytes(oldEncodedPass, 'utf-8'))
+            oldDecodedPass = oldDecodedPass.decode('utf-8')
+
+            # Generates a salt, salts the decoded password, then hashes it.
+            generatedSalt = secrets.token_hex(8)
+            saltedPass = oldDecodedPass.join(generatedSalt)
+            hashedPass = hashlib.new('SHA256')
+            hashedPass.update(bytes(saltedPass, 'utf-8'))
+
+            # Stores the hash and salt.
+            config.set("user", "passhash", hashedPass.hexdigest())
+            config.set("user", "salt", generatedSalt)
+
+            # Updates the versionNum to latest.
+            config.set("version", "versionNum", __version__)
+
+            # Removes the old password option from the config.
+            config.remove_option("user", "password")
+
+            # Writes to file.
+            with open("accinfo.ini", "w") as configfile:
+                config.write(configfile)
+
+        # If the config's version is something else, unable to handle it.
+        else:
+            
+            clearTerm()
+            print("Unable to upgrade accinfo.ini. Please delete it to continue.")
+            input("Enter to quit...")
+            quit()
+
     # Used to create user profile and to create the initial accinfo.ini file.
     def setup():
         clearTerm()
@@ -124,11 +166,18 @@ class Pre:
                 clearTerm()
 
 
-    # Checks to see if accinfo.ini exists, if not, then call Pre.setup() to create one. If yes, then call Main.signIn().
+    # Checks to see if accinfo.ini exists, if not, then call Pre.setup() to create one. If yes, check version, if lower then call Pre.updateConfig(), then call Main.signIn().
     def setupChecker():
         accinfo = os.path.exists('accinfo.ini')
 
         if accinfo == True:
+            # Converts the version denominations to tuple variables, which allows them to be easily compared.
+            fileVer = tuple(map(int, (__version__.split("."))))
+            configVer = tuple(map(int, (config["version"]["versionNum"].split("."))))
+
+            if configVer < fileVer:
+                Pre.updateConfig(configVer)
+
             Main.signIn()
 
         else:
