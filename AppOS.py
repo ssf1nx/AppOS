@@ -21,86 +21,82 @@ class Pre:
     def update():
 
         clearTerm()
-        try:
-            autoUpdate = config["general"]["autoupdate"]
-        except:
-            autoUpdate = "True"
-
-        if autoUpdate == "True": 
+        if config["general"]["autoupdate"] == "True":
             print("Auto-Update Check Enabled.")
-            print("Initializing Update Check...\n")
-
-            # Checks config for localVerTest. Must be added manually.
-            # Used to test update function without going online.
-            # Will pull "online" version number from local config instead.
-            # HOW TO USE:
-            # Add "localVerTest = True" under "version" section in accinfo.ini.
-            # Add "localVerNum = x.x.x" under "version" section in accinfo.ini.
-            # Replace x.x.x with "online" version number you want to simulate.
-            try: 
-                localOnly = config["version"]["localVerTest"]
-            except:
-                localOnly = False
-
-            # Tries to check for updates based on current file version.
-            try:
-                # Online check if localOnly is disabled.
-                if localOnly == False:
-
-                    # Grabs the latest file from Github.
-                    online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
-
-                    # Tries to search the grabbed file for a __version__ for later comparison to local version.
-                    try:
-                        if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
-                            onlineVer = onlineVer.group(1)
-
-                    except:
-                        print("No version identifier on online file, please create issue.")
-
-                # Offline check if localOnly isn't disabled.
-                else:
-
-                    # Tries to grab the variable localVerNum from config.
-                    try:
-                        onlineVer = config["version"]["localVerNum"]
-
-                    except:
-                        print("No version identifier on online file, please create issue.")
-
-                # Tries to convert the version numbers to tuple variables for comparison and compares them.
-                try:
-                    # Converts the version numbers to tuples to compare.
-                    onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
-                    localVerTuple = tuple(map(int, (__version__.split("."))))
-
-                    if onlineVerTuple > localVerTuple:
-                        print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
-                        print("Current version: " + __version__)
-                        input("Enter to continue...")
-
-                    elif onlineVerTuple < localVerTuple:
-                        print("Local version is newer than online version. Proceed with caution.")
-                        input("Enter to continue...")
-
-                    elif onlineVerTuple == localVerTuple:
-                        print("Latest Version\n")
-
-                    # Version number on online or local files is not equal, less than, or greater than one another.
-                    else:
-                        print("Version identifier corrupted or missing. Please redownload.")
-                        input("Enter to continue...")
-
-                except:
-                    print("This file has no version identifier.")
-                    input("Enter to continue...")
-                    
-            except:
-                print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
-                input("Enter to continue...")
-        
         else:
             print("Auto-Update Check Disabled.")
+
+        print("Initializing Update Check...\n")
+
+        # Checks config for localVerTest. Must be added manually.
+        # Used to test update function without going online.
+        # Will pull "online" version number from local config instead.
+        # HOW TO USE:
+        # Add "localVerTest = True" under "version" section in accinfo.ini.
+        # Add "localVerNum = x.x.x" under "version" section in accinfo.ini.
+        # Replace x.x.x with "online" version number you want to simulate.
+        try: 
+            localOnly = config["version"]["localVerTest"]
+        except:
+            localOnly = False
+
+        # Tries to check for updates based on current file version.
+        try:
+            # Online check if localOnly is disabled.
+            if localOnly == False:
+
+                # Grabs the latest file from Github.
+                online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
+
+                # Tries to search the grabbed file for a __version__ for later comparison to local version.
+                try:
+                    if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
+                        onlineVer = onlineVer.group(1)
+
+                except:
+                    print("No version identifier on online file, please create issue.")
+
+            # Offline check if localOnly isn't disabled.
+            else:
+
+                # Tries to grab the variable localVerNum from config.
+                try:
+                    onlineVer = config["version"]["localVerNum"]
+
+                except:
+                    print("No version identifier on online file, please create issue.")
+
+            # Tries to convert the version numbers to tuple variables for comparison and compares them.
+            try:
+                # Converts the version numbers to tuples to compare.
+                onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
+                localVerTuple = tuple(map(int, (__version__.split("."))))
+
+                if onlineVerTuple > localVerTuple:
+                    print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
+                    print("Current version: " + __version__)
+                    input("Enter to continue...")
+
+                elif onlineVerTuple < localVerTuple:
+                    print("Local version is newer than online version. Proceed with caution.")
+                    input("Enter to continue...")
+
+                elif onlineVerTuple == localVerTuple:
+                    print("Latest Version\n")
+
+                # Version number on online or local files is not equal, less than, or greater than one another.
+                else:
+                    print("Version identifier corrupted or missing. Please redownload.")
+                    input("Enter to continue...")
+
+            except:
+                print("This file has no version identifier.")
+                input("Enter to continue...")
+                
+        except:
+            print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
+            input("Enter to continue...")
+        
 
 
     # Updates the accinfo.ini when it's outdated.
@@ -342,7 +338,7 @@ class Apps:
             clearTerm()
 
             print("Please Choose an Option")
-            print("\n1. Change your username\n2. Change your password\n3. Toggle auto-update check")
+            print("\n1. Change your username\n2. Change your password\n3. Toggle auto-update check\n4. Manual update check")
             print("\n\n#. Credits\n\n0. Exit\n")
             try:
                 devtoolsBoolean = config["devtools"]["enabled"]
@@ -439,6 +435,11 @@ class Apps:
                 else:
                     print("\n\nCancelled.")
                     time.sleep(1.5)
+
+            # Manually checks for updates
+            elif settingsChoice == "4":
+                clearTerm()
+                Pre.update()
 
             # Very simple credits screen.
             elif settingsChoice == "#":
@@ -804,5 +805,11 @@ if __name__ == '__main__':
     if accinfo == True:
         config.read(file)
 
-    Pre.update()
+    try:
+        autoUpdate = config["general"]["autoupdate"]
+    except:
+        autoUpdate = "True"
+
+    if autoUpdate == "True":
+        Pre.update()
     Pre.setupChecker()
