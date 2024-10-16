@@ -108,47 +108,57 @@ class Pre:
 
         # If the config's version is 2.0.0 (last version), then upgrade it like this.
         if configVer == (2, 0, 0):
+
+            # Tries to update the config, otherwise it throws an error.
+            try:
             
-            # Grabs the Base64 Encoded password from the config.
-            oldEncodedPass = config["user"]["password"]
+                # Grabs the Base64 Encoded password from the config.
+                oldEncodedPass = config["user"]["password"]
 
-            # Decodes it.
-            oldDecodedPass = base64.b64decode(bytes(oldEncodedPass, 'utf-8'))
-            oldDecodedPass = oldDecodedPass.decode('utf-8')
+                # Decodes it.
+                oldDecodedPass = base64.b64decode(bytes(oldEncodedPass, 'utf-8'))
+                oldDecodedPass = oldDecodedPass.decode('utf-8')
 
-            # Generates a salt, salts the decoded password, then hashes it.
-            generatedSalt = secrets.token_hex(8)
-            saltedPass = oldDecodedPass.join(generatedSalt)
-            hashedPass = hashlib.new('SHA256')
-            hashedPass.update(bytes(saltedPass, 'utf-8'))
+                # Generates a salt, salts the decoded password, then hashes it.
+                generatedSalt = secrets.token_hex(8)
+                saltedPass = oldDecodedPass.join(generatedSalt)
+                hashedPass = hashlib.new('SHA256')
+                hashedPass.update(bytes(saltedPass, 'utf-8'))
 
-            # Stores the hash and salt.
-            config.set("user", "passhash", hashedPass.hexdigest())
-            config.set("user", "salt", generatedSalt)
+                # Stores the hash and salt.
+                config.set("user", "passhash", hashedPass.hexdigest())
+                config.set("user", "salt", generatedSalt)
 
-            # Updates the versionNum to latest.
-            config.set("version", "versionNum", __version__)
+                # Updates the versionNum to latest.
+                config.set("version", "versionNum", __version__)
 
-            # Removes the old password option from the config.
-            config.remove_option("user", "password")
+                # Removes the old password option from the config.
+                config.remove_option("user", "password")
 
-            # Adds the devtools section and it's default options + values.
-            config.add_section("devtools")
-            config.set("devtools", "enabled", "false")
-            
-            # Adds the general section and it's default options + values.
-            config.add_section("general")
-            config.set("general", "autoupdate", "True")
+                # Adds the devtools section and it's default options + values.
+                config.add_section("devtools")
+                config.set("devtools", "enabled", "false")
+                
+                # Adds the general section and it's default options + values.
+                config.add_section("general")
+                config.set("general", "autoupdate", "True")
 
-            # Writes to file.
-            with open("accinfo.ini", "w") as configfile:
-                config.write(configfile)
+                # Writes to file.
+                with open("accinfo.ini", "w") as configfile:
+                    config.write(configfile)
+
+            except:
+
+                clearTerm()
+                print("accinfo.ini was unable to be upgraded. Please delete it to continue.")
+                input("Enter to quit...")
+                quit()
 
         # If the config's version is something else, unable to handle it.
         else:
             
             clearTerm()
-            print("Unable to upgrade accinfo.ini. Please delete it to continue.")
+            print("accinfo.ini's version is unable to be upgraded. Please delete it to continue.")
             input("Enter to quit...")
             quit()
 
