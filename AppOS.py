@@ -701,17 +701,6 @@ def drawLine():
     print('_' * term_size.columns)
 
 
-# Encodes input in Base64
-def decode64(text):
-    try:
-        decodeVar = text
-        decodeVar = base64.b64decode(decodeVar)
-        decodeVar = decodeVar.decode("utf-8")
-        return decodeVar
-    except:
-        return text
-
-
 # Calls Pre.update() for update check and then Pre.setupChecker() to check for the accinfo.ini file.
 if __name__ == '__main__':
     accinfo = os.path.exists('accinfo.ini')
