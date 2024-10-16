@@ -132,6 +132,14 @@ class Pre:
             # Removes the old password option from the config.
             config.remove_option("user", "password")
 
+            # Adds the devtools section and it's default options + values.
+            config.add_section("devtools")
+            config.set("devtools", "enabled", "false")
+            
+            # Adds the general section and it's default options + values.
+            config.add_section("general")
+            config.set("general", "autoupdate", "True")
+
             # Writes to file.
             with open("accinfo.ini", "w") as configfile:
                 config.write(configfile)
