@@ -40,12 +40,12 @@ class Pre:
             try: 
                 localOnly = config["version"]["localVerTest"]
             except:
-                localOnly = False
+                localOnly = "False"
 
             # Tries to check for updates based on current file version.
             try:
                 # Online check if localOnly is disabled.
-                if localOnly == False:
+                if localOnly == "False":
 
                     # Grabs the latest file from Github.
                     online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
@@ -471,7 +471,7 @@ class Apps:
             config.read(file)
 
             print("DevTools Version 1.0:\n\n")
-            print("1. Edit/View accinfo.ini file\n2. Delete accinfo.ini (Requires exit)\n")
+            print("1. Edit/View accinfo.ini file\n2. Delete accinfo.ini (Requires exit)\n3. Local Update Test Options")
 
             print("\n0. Exit\n")
             devtoolsChoice = str(input(": "))
@@ -484,6 +484,10 @@ class Apps:
             elif devtoolsChoice == "2":
                 clearTerm()
                 Apps.configDeletion()
+
+            elif devtoolsChoice == "3":
+                clearTerm()
+                Apps.localUpdateOptions(True)
                 
             elif devtoolsChoice == "0":
                 inUse = False
@@ -673,6 +677,134 @@ class Apps:
             time.sleep(1.5)
             pass
 
+    # Part of DevTools app. Sets up and manages the local update test feature.
+    def localUpdateOptions(devtoolsUpdateOptions):
+        while devtoolsUpdateOptions == True:
+            clearTerm()
+            config.read(file)
+
+            try:
+                setup = config["version"]["localVerTest"]
+            except:
+                print("Local Update Test")
+                drawLine()
+                print("\nChanges what the program's percieved newest online version is.\n")
+                print("Before you can use this feature, your config must be updated to include it.")
+                print("Allow changes to your config? (no data loss) (y/N)\n")
+
+                devtoolsChoice = str(input(": "))
+
+                if devtoolsChoice.lower() == "y":
+                    config.set("version", "localVerTest", "False")
+                    config.set("version", "localVerNum", str(__version__))
+                    with open(file, "w") as configfile:
+                        config.write(configfile)
+                    
+                    print("\nWritten successfully.")
+
+                    time.sleep(1.5)
+
+                else:
+                    print("\nCancelled.")
+
+                    time.sleep(1.5)
+
+                    devtoolsUpdateOptions = False
+                    break
+
+            clearTerm()
+            print("Local Update Test")
+            drawLine()
+            print("\nChanges what the program's percieved newest online version is.")
+            print("\n1. Toggle Test\n2. Set Online Version\n3. Rollback Config")
+            print("\n0. Exit\n")
+            
+            devtoolsChoice = str(input(": "))
+
+            if devtoolsChoice == "1":
+                clearTerm()
+                testVar = config["version"]["localVerTest"]
+                if testVar == "True":
+                    testState = "Enabled"
+                else:
+                    testState = "Disabled"
+
+                print("Toggle the Local Update Test? (y/N)")
+                print("CURRENTLY: " + testState + ".\n\n")
+                devtoolsChoice = str(input(": "))
+
+                if devtoolsChoice.lower() == "y":
+                    if testState == "Enabled":
+                        config.set("version", "localVerTest", "False")
+                        testState = "Disabled"
+                    else:
+                        config.set("version", "localVerTest", "True")
+                        testState = "Enabled"
+
+                    with open(file, "w") as configfile:
+                        config.write(configfile)
+                    
+                    print("\nLocal Update Test " + testState + ".")
+                    
+                    time.sleep(1.5)
+                else:
+                    print("\nCancelled.")
+
+                    time.sleep(1.5)
+
+            elif devtoolsChoice == "2":
+                clearTerm()
+                testNum = config["version"]["localVerNum"]
+
+                print("Local Update Test Version Number")
+                print("(What the program thinks the online version is.)")
+                print("CURRENTLY: " + testNum + "\n")
+                print("Please type what you'd like to set it to:\n\n")
+
+                devtoolsChoice = str(input(": "))
+
+                config.set("version", "localVerNum", devtoolsChoice)
+                with open(file, "w") as configfile:
+                    config.write(configfile)
+
+                print("\n Set " + devtoolsChoice + " as the online version number.")
+
+                time.sleep(1.5)
+
+            elif devtoolsChoice == "3":
+                clearTerm()
+                print("*WARNING*")
+                drawLine()
+                print("\nThis will remove all local update test variables from your \"accinfo.ini\" file.")
+                print("Are you SURE you want to REMOVE them? (y/N)")
+                print("\n(Re-entering this DevTool app will offer to re-add them.)\n")
+                devtoolsChoice = input(": ")
+
+                if devtoolsChoice.lower() == "y":
+                    config.remove_option("version", "localVerTest")
+                    config.remove_option("version", "localVerNum")
+                    with open(file, "w") as configfile:
+                        config.write(configfile)
+                    
+                    print("\n Config rolledback. Exiting Local Update Test Options.")
+
+                    time.sleep(1.5)
+
+                    devtoolsUpdateOptions = False
+
+                else:
+                    print("\nCancelled.")
+
+                    time.sleep(1.5)
+
+            elif devtoolsChoice == "0":
+                devtoolsUpdateOptions = False
+
+            else:
+                print("\nInvalid Choice")
+
+                time.sleep(1.5)
+                
 
             
 
