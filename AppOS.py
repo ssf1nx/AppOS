@@ -21,10 +21,13 @@ class Pre:
     def update():
 
         clearTerm()
-        if config["general"]["autoupdate"] == "True":
+        try: 
+            if config["general"]["autoupdate"] == "True":
+                print("Auto-Update Check Enabled.")
+            else:
+                print("Auto-Update Check Disabled.")
+        except:
             print("Auto-Update Check Enabled.")
-        else:
-            print("Auto-Update Check Disabled.")
 
         print("Initializing Update Check...\n")
 
