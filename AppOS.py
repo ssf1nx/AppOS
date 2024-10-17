@@ -31,22 +31,22 @@ class Pre:
 
         print("Initializing Update Check...\n")
 
-        # Checks config for localVerTest. Must be added manually.
+        # Checks config for localVerTest. Can use DevTools to enable and manage.
         # Used to test update function without going online.
         # Will pull "online" version number from local config instead.
-        # HOW TO USE:
+        # HOW TO USE (manually):
         # Add "localVerTest = True" under "version" section in accinfo.ini.
         # Add "localVerNum = x.x.x" under "version" section in accinfo.ini.
         # Replace x.x.x with "online" version number you want to simulate.
         try: 
             localOnly = config["version"]["localVerTest"]
         except:
-            localOnly = False
+            localOnly = "False"
 
         # Tries to check for updates based on current file version.
         try:
             # Online check if localOnly is disabled.
-            if localOnly == False:
+            if localOnly == "False":
 
                 # Grabs the latest file from Github.
                 online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
@@ -493,7 +493,7 @@ class Apps:
             config.read(file)
 
             print("DevTools Version 1.0:\n\n")
-            print("1. Edit/View accinfo.ini file\n2. Delete accinfo.ini (Requires exit)\n")
+            print("1. Edit/View accinfo.ini file\n2. Delete accinfo.ini (Requires exit)\n3. Local Update Test Options")
 
             print("\n0. Exit\n")
             devtoolsChoice = str(input(": "))
@@ -506,6 +506,10 @@ class Apps:
             elif devtoolsChoice == "2":
                 clearTerm()
                 Apps.configDeletion()
+
+            elif devtoolsChoice == "3":
+                clearTerm()
+                Apps.localUpdateOptions(True)
                 
             elif devtoolsChoice == "0":
                 inUse = False
@@ -514,231 +518,165 @@ class Apps:
 
                 time.sleep(0.5)
 
+    # Part of DevTools app. Shows the contents and allows edits of the accinfo.ini file.
     def configEditor(devtoolsEdit):
-
-        try:
-
-            devtoolsEncoding = True
-
-            while devtoolsEdit == True:
-
-                clearTerm()
-
-                print("Config File (accinfo.ini):\n")
-                print("[version]")
-                print("versionnum = " + config["version"]["versionnum"] + " # Only changes the version of the accinfo.ini file.")
-                print("\n[user]")
-                print("username = " + config["user"]["username"])
-                if devtoolsEncoding == False:
-                    print("password = " + str(decode64(config["user"]["password"])) + " # Decoded from Base64. Saved in Base64.")
-
-                else:
-                    print("password = " + config["user"]["password"] + " # Encoded in Base64. What is actually saved.")
-
-                print("\n[devtools]")
-                print("enabled = " + config["devtools"]["enabled"])
-                print("\n[general]")
-                print("autoupdate = " + config["general"]["autoupdate"])
-                drawLine()
-                print("\n1. Edit [version]\n2. Edit [user]\n3. Edit [devtools]\n4. Edit [general]\n\n0. Cancel\n")
-                print("#. Toggle Base64 encoding\n")
-                devtoolsChoice = str(input(": "))
-
-                if devtoolsChoice == "1":
-
-                    clearTerm()
-
-                    print("Config File (accinfo.ini):\n")
-                    print("[version]")
-                    print("versionnum = " + config["version"]["versionnum"])
-                    drawLine()
-                    print("\n1. Edit versionnum\n\n0. Back\n")
-                    devtoolsChoice = str(input(": "))
-
-                    if devtoolsChoice == "1":
-
-                        clearTerm()
-
-                        print("\nConfig File (accinfo.ini):\n")
-                        print("CURRENTLY: versionnum = " + config["version"]["versionnum"])
-                        devtoolsChoice = str(input("\n\nCHANGE TO: versionnum = "))
-
-                        config.set("version", "versionnum", devtoolsChoice)
-                        with open(file, "w") as configfile:
-                            config.write(configfile)
-
-                    elif devtoolsChoice == "0":
-                        pass
-
-                    else:
-                        print("\nInvalid Choice")
-
-                        time.sleep(1.5)
-
-                elif devtoolsChoice == "2":
-
-                    clearTerm()
-
-                    print("Config File (accinfo.ini):\n")
-                    print("[user]")
-                    print("username = " + config["user"]["username"])
-                    if devtoolsEncoding == False:
-                        print("password = " + str(decode64(config["user"]["password"])) + " # Decoded from Base64. Saved in Base64.")
-
-                    else:
-                        print("password = " + config["user"]["password"] + " # Encoded in Base64. What is actually saved.")
-
-                    drawLine()
-                    print("\n1. Edit username\n2. Edit password\n\n0. Back\n")
-                    devtoolsChoice = str(input(": "))
-
-                    if devtoolsChoice == "1":
-
-                        clearTerm()
-
-                        print("\nConfig File (accinfo.ini):\n")
-                        print("CURRENTLY: username = " + config["user"]["username"])
-                        devtoolsChoice = str(input("\n\nCHANGE TO: username = "))
-
-                        config.set("user", "username", devtoolsChoice)
-                        with open(file, "w") as configfile:
-                            config.write(configfile)
-
-                    elif devtoolsChoice == "2":
-
-                        clearTerm()
-
-                        print("Would you like to auto-encode (recommended) your input into Base64? (Y/n)\nOtherwise your raw input is saved.\n\n(Saving a non-Base64 input then trying to login with it will not work.)\n\n")
-                        devtoolsChoice = input(": ")
-                        
-                        if devtoolsChoice.lower() == "n":
-                            devtoolsEncodedPass = False
-                            print("\nAuto-encode has been disabled.")
-
-                            time.sleep(1.5)
-
-                            pass
-
-                        else:
-                            devtoolsEncodedPass = True
-                            print("\nAuto-encode has been enabled.")
-
-                            time.sleep(1.5)
-
-                            pass
-
-                        clearTerm()
-
-                        print("\nConfig File (accinfo.ini):\n")
-                        print("CURRENTLY: password = " + config["user"]["password"] + " # Decoded = " + str(decode64(config["user"]["password"])))
-                        devtoolsChoice = str(input("\n\nCHANGE TO: password = "))
-
-                        if devtoolsEncodedPass == True:
-                            devtoolsChoice = base64.b64encode(bytes(devtoolsChoice, "utf-8"))
-                            devtoolsChoice = devtoolsChoice.decode("utf-8")
-
-                        elif devtoolsEncodedPass == False:
-                            pass
-
-                        config.set("user", "password", devtoolsChoice)
-                        with open(file, "w") as configfile:
-                            config.write(configfile)
-
-                    elif devtoolsChoice == "0":
-                        pass
-
-                    else:
-                        print("\nInvalid Choice")
-
-                        time.sleep(1.5)
-
-                elif devtoolsChoice == "3":
-
-                    clearTerm()
-
-                    print("Config File (accinfo.ini):\n")
-                    print("[devtools]")
-                    print("enabled = " + config["devtools"]["enabled"])
-                    drawLine()
-                    print("\n1. Edit enabled\n\n0. Back\n")
-                    devtoolsChoice = str(input(": "))
-
-                    if devtoolsChoice == "1":
-
-                        clearTerm()
-
-                        print("\nConfig File (accinfo.ini):\n")
-                        print("CURRENTLY: enabled = " + config["devtools"]["enabled"])
-                        devtoolsChoice = str(input("\n\nCHANGE TO: enabled = "))
-
-                        config.set("devtools", "enabled", devtoolsChoice)
-                        with open(file, "w") as configfile:
-                            config.write(configfile)
-
-                elif devtoolsChoice == "4":
-
-                    clearTerm()
-
-                    print("Config File (accinfo.ini):\n")
-                    print("[general]")
-                    print("autoupdate = " + config["general"]["autoupdate"])
-                    drawLine()
-                    print("\n1. Edit autoupdate\n\n0. Back\n")
-                    devtoolsChoice = str(input(": "))
-
-                    if devtoolsChoice == "1":
-
-                        clearTerm()
-
-                        print("\nConfig File (accinfo.ini):\n")
-                        print("CURRENTLY: autoupdate = " + config["general"]["autoupdate"])
-                        devtoolsChoice = str(input("\n\nCHANGE TO: autoupdate = "))
-
-                        config.set("general", "autoupdate", devtoolsChoice)
-                        with open(file, "w") as configfile:
-                            config.write(configfile)
-
-                elif devtoolsChoice == "0":
-                    devtoolsEdit = False
-
-                elif devtoolsChoice == "#":
-
-                    clearTerm()
-
-                    print("Are you sure you want to toggle? (y/N)\nThis will reveal/hide (decode/encode) your password while in DevTools this session, but WON'T change how it is saved in the accinfo.ini file.\n\n")
-                    devtoolsChoice = input(": ")
-                    
-                    if devtoolsChoice.lower() == "y":
-                        if devtoolsEncoding == True:
-                            print("\nToggling OFF (decoding)")
-                            devtoolsEncoding = False
-                            
-                            time.sleep(1.5)
-
-                        elif devtoolsEncoding == False:
-                            print("\nToggling ON (encoding)")
-                            devtoolsEncoding = True
-
-                            time.sleep(1.5)
-
-                    else:
-                        print("\nCancelling.")
-                        time.sleep(1.5)
-
-                else:
+            
+        while devtoolsEdit == True:
+            clearTerm()
+
+            # Reloads the config file every time the sections are listed to update for changes.
+            config.read(file)
+
+            print("Please type the [section] you want to edit an option of...")
+            print("(Don't include the [] brackets when you type it. It is case sensitive.)\n")
+            
+            print("Config File - accinfo.ini")
+            drawLine()
+            print("")
+            # Collects all sections from the config and stores them in a list variable.
+            sections = config.sections()
+            
+            # For every section,
+            for i in sections:
+
+                # Print it's name,
+                print("[" + i + "]")
+                # Collect all of the options of the section and store them in a list variable,
+                opts = config.options(i)
+
+                # For every collected option for this section,
+                for j in opts:
+
+                    # Store it's value,
+                    val = config.get(i, j)
+                    # Print the option's name and its stored value.
+                    print(j + " = " + str(val))
+
+                print("")
+            
+            drawLine()
+            print("\n0. Exit Config Editor\n")
+
+            devtoolsChoice = str(input(": "))
+
+            # Leaves the Config Editor if user inputs 0.
+            if devtoolsChoice == "0":
+                devtoolsEdit = False
+
+            # Otherwise,
+            else:
+                # For every section,
+                for i in sections:
+
+                    # Check if the user's input is equal to the section's name,
+                    if devtoolsChoice == i:
+                        # If it is, store that section's name in a variable.
+                        selectedSec = i
+                        optPicking = True
+                        break
+
+                    # Otherwise, set the variable to none.
+                    selectedSec = "none"
+
+                # If the selected section is "none", it's invalid. Reprompt user.
+                if selectedSec == "none":
                     print("\nInvalid Choice")
 
                     time.sleep(1.5)
+                
+                # Otherwise,
+                else:
+                    while optPicking == True:
+                        clearTerm()
 
-        except:
+                        print("Please type the option you want to edit the value of...")
+                        print("(It is case sensitive.)\n")
 
-            clearTerm()
-            print("An error has occcured, cancelling.")
+                        print("Config File - accinfo.ini")
+                        drawLine()
+                        print("")
+                        # Print only the selected section,
+                        print("[" + selectedSec + "]")
 
-            devtoolsEdit = False
-            
-            time.sleep(1.5)
+                        # Collect the options of the selected section into a list variable,
+                        opts = config.options(selectedSec)
 
+                        # For every option,
+                        for i in opts:
+
+                            # Store the option's value in a variable,
+                            val = config.get(selectedSec, i)
+                            # Print the option's name and its stored value.
+                            print(i + " = " + val)
+
+                        print("")
+                        drawLine()
+                        print("\n0. Back\n")
+
+                        selectedOpt = str(input(": "))
+
+                        # If the user inputs 0, send them back to picking a section.
+                        if selectedOpt == "0":
+                            optPicking = False
+                        
+                        # Otherwise,
+                        else:
+                            # For every option,
+                            for i in opts:
+
+                                # If the user's input equals an option's name,
+                                if selectedOpt == i:
+                                    # Store that option's name in a variable.
+                                    selectedOpt = i
+                                    break
+
+                                # Otherwise, set the variable to none.
+                                selectedOpt = "none"
+
+                            # If the selected option is "none", invalid choice. Reprompt user.
+                            if selectedOpt == "none":
+                                print("\nInvalid Choice")
+
+                                time.sleep(1.5)
+
+                            # Otherwise,
+                            else:
+                                clearTerm()
+
+                                print("Please type the new value...")
+                                print("(It is case sensitive.)\n")
+
+                                print("Config File - accinfo.ini")
+                                drawLine()
+                                print("")
+                                # Print the selected section,
+                                print("[" + selectedSec + "]")
+
+                                # Store the value of the currently selected option.
+                                val = config.get(selectedSec, selectedOpt)
+
+                                # Prints the option's name and its value,
+                                print(selectedOpt + " = " + val + "\n")
+
+                                drawLine()
+                                print("")
+                                newVal = str(input(": "))
+
+                                # Set the option's value to the user's input,
+                                config.set(selectedSec, selectedOpt, newVal)
+                                
+                                # Write to file,
+                                with open(file, "w") as configfile:
+                                    config.write(configfile)
+
+                                print("\nWritten.")
+
+                                time.sleep(1.5)
+
+                                # Exit for loops, reprompt user for section.
+                                optPicking = False
+
+    # Part of DevTools app. Deletes the accinfo.ini file.
     def configDeletion():
         
         print("*WARNING*")
@@ -750,7 +688,7 @@ class Apps:
 
         if devtoolsChoice.lower() == "y":
             os.remove("./accinfo.ini")
-            print("accinfo.ini deleted. Exiting AppOS.")
+            print("\naccinfo.ini deleted. Exiting AppOS.")
             time.sleep(2)
 
             exit()
@@ -761,6 +699,146 @@ class Apps:
             time.sleep(1.5)
             pass
 
+    # Part of DevTools app. Sets up and manages the local update test feature.
+    def localUpdateOptions(devtoolsUpdateOptions):
+        while devtoolsUpdateOptions == True:
+            clearTerm()
+            config.read(file)
+
+            # Tries to read the test variable, and if it can't find it, then offer to create them.
+            try:
+                setup = config["version"]["localVerTest"]
+            except:
+                print("Local Update Test")
+                drawLine()
+                print("\nChanges what the program's percieved newest online version is.\n")
+                print("Before you can use this feature, your config must be updated to include it.")
+                print("Allow changes to your config? (no data loss) (y/N)\n")
+
+                devtoolsChoice = str(input(": "))
+
+                if devtoolsChoice.lower() == "y":
+                    # Adds "localVerTest" and "localVerNum" to the config under [version].
+                    config.set("version", "localVerTest", "False")
+                    config.set("version", "localVerNum", str(__version__))
+
+                    with open(file, "w") as configfile:
+                        config.write(configfile)
+                    
+                    print("\nWritten successfully.")
+
+                    time.sleep(1.5)
+
+                else:
+                    print("\nCancelled.")
+
+                    time.sleep(1.5)
+
+                    devtoolsUpdateOptions = False
+                    break
+
+            clearTerm()
+            print("Local Update Test")
+            drawLine()
+            print("\nChanges what the program's percieved newest online version is.")
+            print("\n1. Toggle Test\n2. Set Online Version\n3. Rollback Config")
+            print("\n0. Exit\n")
+            
+            devtoolsChoice = str(input(": "))
+
+            # Will toggle the local update test on and off.
+            if devtoolsChoice == "1":
+                clearTerm()
+                testVar = config["version"]["localVerTest"]
+
+                if testVar == "True":
+                    testState = "Enabled"
+                else:
+                    testState = "Disabled"
+
+                print("Toggle the Local Update Test? (y/N)")
+                print("CURRENTLY: " + testState + ".\n\n")
+
+                devtoolsChoice = str(input(": "))
+
+                if devtoolsChoice.lower() == "y":
+                    if testState == "Enabled":
+                        config.set("version", "localVerTest", "False")
+                        testState = "Disabled"
+                    else:
+                        config.set("version", "localVerTest", "True")
+                        testState = "Enabled"
+
+                    with open(file, "w") as configfile:
+                        config.write(configfile)
+                    
+                    print("\nLocal Update Test " + testState + ".")
+                    
+                    time.sleep(1.5)
+                else:
+                    print("\nCancelled.")
+
+                    time.sleep(1.5)
+
+            # Will allow the user to change what the simulated online version number is.
+            elif devtoolsChoice == "2":
+                clearTerm()
+                testNum = config["version"]["localVerNum"]
+
+                print("Local Update Test Version Number")
+                print("(What the program thinks the online version is.)")
+                print("CURRENTLY: " + testNum + "\n")
+                print("Please type what you'd like to set it to:\n\n")
+
+                devtoolsChoice = str(input(": "))
+
+                config.set("version", "localVerNum", devtoolsChoice)
+
+                with open(file, "w") as configfile:
+                    config.write(configfile)
+
+                print("\n Set " + devtoolsChoice + " as the online version number.")
+
+                time.sleep(1.5)
+
+            # Will remove the test variables from the config.
+            elif devtoolsChoice == "3":
+                clearTerm()
+                print("*WARNING*")
+                drawLine()
+                print("\nThis will remove all local update test variables from your \"accinfo.ini\" file.")
+                print("Are you SURE you want to REMOVE them? (y/N)")
+                print("\n(Re-entering this DevTool app will offer to re-add them.)\n")
+                devtoolsChoice = input(": ")
+
+                if devtoolsChoice.lower() == "y":
+                    # Removes "localVerTest" and "localVerNum" from under [version] in the config.
+                    config.remove_option("version", "localVerTest")
+                    config.remove_option("version", "localVerNum")
+
+                    with open(file, "w") as configfile:
+                        config.write(configfile)
+                    
+                    print("\n Config rolledback. Exiting Local Update Test Options.")
+
+                    time.sleep(1.5)
+
+                    devtoolsUpdateOptions = False
+
+                else:
+                    print("\nCancelled.")
+
+                    time.sleep(1.5)
+
+            # Exits the app.
+            elif devtoolsChoice == "0":
+                devtoolsUpdateOptions = False
+
+            else:
+                print("\nInvalid Choice")
+
+                time.sleep(1.5)
+                
 
             
 
@@ -787,17 +865,6 @@ def clearTerm():
 def drawLine():
     term_size = os.get_terminal_size()
     print('_' * term_size.columns)
-
-
-# Encodes input in Base64
-def decode64(text):
-    try:
-        decodeVar = text
-        decodeVar = base64.b64decode(decodeVar)
-        decodeVar = decodeVar.decode("utf-8")
-        return decodeVar
-    except:
-        return text
 
 
 # Calls Pre.update() for update check and then Pre.setupChecker() to check for the accinfo.ini file.
