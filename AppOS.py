@@ -30,10 +30,10 @@ class Pre:
             print("Auto-Update Check Enabled.")
             print("Initializing Update Check...\n")
 
-            # Checks config for localVerTest. Must be added manually.
+            # Checks config for localVerTest. Can use DevTools to enable and manage.
             # Used to test update function without going online.
             # Will pull "online" version number from local config instead.
-            # HOW TO USE:
+            # HOW TO USE (manually):
             # Add "localVerTest = True" under "version" section in accinfo.ini.
             # Add "localVerNum = x.x.x" under "version" section in accinfo.ini.
             # Replace x.x.x with "online" version number you want to simulate.
