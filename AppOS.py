@@ -21,86 +21,85 @@ class Pre:
     def update():
 
         clearTerm()
-        try:
-            autoUpdate = config["general"]["autoupdate"]
+        try: 
+            if config["general"]["autoupdate"] == "True":
+                print("Auto-Update Check Enabled.")
+            else:
+                print("Auto-Update Check Disabled.")
         except:
-            autoUpdate = "True"
-
-        if autoUpdate == "True": 
             print("Auto-Update Check Enabled.")
-            print("Initializing Update Check...\n")
 
-            # Checks config for localVerTest. Can use DevTools to enable and manage.
-            # Used to test update function without going online.
-            # Will pull "online" version number from local config instead.
-            # HOW TO USE (manually):
-            # Add "localVerTest = True" under "version" section in accinfo.ini.
-            # Add "localVerNum = x.x.x" under "version" section in accinfo.ini.
-            # Replace x.x.x with "online" version number you want to simulate.
-            try: 
-                localOnly = config["version"]["localVerTest"]
-            except:
-                localOnly = "False"
+        print("Initializing Update Check...\n")
 
-            # Tries to check for updates based on current file version.
-            try:
-                # Online check if localOnly is disabled.
-                if localOnly == "False":
+        # Checks config for localVerTest. Can use DevTools to enable and manage.
+        # Used to test update function without going online.
+        # Will pull "online" version number from local config instead.
+        # HOW TO USE (manually):
+        # Add "localVerTest = True" under "version" section in accinfo.ini.
+        # Add "localVerNum = x.x.x" under "version" section in accinfo.ini.
+        # Replace x.x.x with "online" version number you want to simulate.
+        try: 
+            localOnly = config["version"]["localVerTest"]
+        except:
+            localOnly = "False"
 
-                    # Grabs the latest file from Github.
-                    online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
+        # Tries to check for updates based on current file version.
+        try:
+            # Online check if localOnly is disabled.
+            if localOnly == "False":
 
-                    # Tries to search the grabbed file for a __version__ for later comparison to local version.
-                    try:
-                        if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
-                            onlineVer = onlineVer.group(1)
+                # Grabs the latest file from Github.
+                online = urllib.urlopen("https://raw.githubusercontent.com/ssf1nx/AppOS/main/AppOS.py").read()
 
-                    except:
-                        print("No version identifier on online file, please create issue.")
-
-                # Offline check if localOnly isn't disabled.
-                else:
-
-                    # Tries to grab the variable localVerNum from config.
-                    try:
-                        onlineVer = config["version"]["localVerNum"]
-
-                    except:
-                        print("No version identifier on online file, please create issue.")
-
-                # Tries to convert the version numbers to tuple variables for comparison and compares them.
+                # Tries to search the grabbed file for a __version__ for later comparison to local version.
                 try:
-                    # Converts the version numbers to tuples to compare.
-                    onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
-                    localVerTuple = tuple(map(int, (__version__.split("."))))
-
-                    if onlineVerTuple > localVerTuple:
-                        print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
-                        print("Current version: " + __version__)
-                        input("Enter to continue...")
-
-                    elif onlineVerTuple < localVerTuple:
-                        print("Local version is newer than online version. Proceed with caution.")
-                        input("Enter to continue...")
-
-                    elif onlineVerTuple == localVerTuple:
-                        print("Latest Version\n")
-
-                    # Version number on online or local files is not equal, less than, or greater than one another.
-                    else:
-                        print("Version identifier corrupted or missing. Please redownload.")
-                        input("Enter to continue...")
+                    if onlineVer := re.search(r"__version__ \= \"(.*?)\"", str(online)):
+                        onlineVer = onlineVer.group(1)
 
                 except:
-                    print("This file has no version identifier.")
+                    print("No version identifier on online file, please create issue.")
+
+            # Offline check if localOnly isn't disabled.
+            else:
+
+                # Tries to grab the variable localVerNum from config.
+                try:
+                    onlineVer = config["version"]["localVerNum"]
+
+                except:
+                    print("No version identifier on online file, please create issue.")
+
+            # Tries to convert the version numbers to tuple variables for comparison and compares them.
+            try:
+                # Converts the version numbers to tuples to compare.
+                onlineVerTuple = tuple(map(int, (onlineVer.split("."))))
+                localVerTuple = tuple(map(int, (__version__.split("."))))
+
+                if onlineVerTuple > localVerTuple:
+                    print("Newer version " + onlineVer + " available at https://github/ssf1nx/AppOS")
+                    print("Current version: " + __version__)
                     input("Enter to continue...")
-                    
+
+                elif onlineVerTuple < localVerTuple:
+                    print("Local version is newer than online version. Proceed with caution.")
+                    input("Enter to continue...")
+
+                elif onlineVerTuple == localVerTuple:
+                    print("Latest Version\n")
+
+                # Version number on online or local files is not equal, less than, or greater than one another.
+                else:
+                    print("Version identifier corrupted or missing. Please redownload.")
+                    input("Enter to continue...")
+
             except:
-                print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
+                print("This file has no version identifier.")
                 input("Enter to continue...")
+                
+        except:
+            print("Unable to retrieve latest version info. Software update failed.\n\n* Try checking your internet connection.\n* Check if the repository is public")
+            input("Enter to continue...")
         
-        else:
-            print("Auto-Update Check Disabled.")
 
 
     # Updates the accinfo.ini when it's outdated.
@@ -108,39 +107,57 @@ class Pre:
 
         # If the config's version is 2.0.0 (last version), then upgrade it like this.
         if configVer == (2, 0, 0):
+
+            # Tries to update the config, otherwise it throws an error.
+            try:
             
-            # Grabs the Base64 Encoded password from the config.
-            oldEncodedPass = config["user"]["password"]
+                # Grabs the Base64 Encoded password from the config.
+                oldEncodedPass = config["user"]["password"]
 
-            # Decodes it.
-            oldDecodedPass = base64.b64decode(bytes(oldEncodedPass, 'utf-8'))
-            oldDecodedPass = oldDecodedPass.decode('utf-8')
+                # Decodes it.
+                oldDecodedPass = base64.b64decode(bytes(oldEncodedPass, 'utf-8'))
+                oldDecodedPass = oldDecodedPass.decode('utf-8')
 
-            # Generates a salt, salts the decoded password, then hashes it.
-            generatedSalt = secrets.token_hex(8)
-            saltedPass = oldDecodedPass.join(generatedSalt)
-            hashedPass = hashlib.new('SHA256')
-            hashedPass.update(bytes(saltedPass, 'utf-8'))
+                # Generates a salt, salts the decoded password, then hashes it.
+                generatedSalt = secrets.token_hex(8)
+                saltedPass = oldDecodedPass.join(generatedSalt)
+                hashedPass = hashlib.new('SHA256')
+                hashedPass.update(bytes(saltedPass, 'utf-8'))
 
-            # Stores the hash and salt.
-            config.set("user", "passhash", hashedPass.hexdigest())
-            config.set("user", "salt", generatedSalt)
+                # Stores the hash and salt.
+                config.set("user", "passhash", hashedPass.hexdigest())
+                config.set("user", "salt", generatedSalt)
 
-            # Updates the versionNum to latest.
-            config.set("version", "versionNum", __version__)
+                # Updates the versionNum to latest.
+                config.set("version", "versionNum", __version__)
 
-            # Removes the old password option from the config.
-            config.remove_option("user", "password")
+                # Removes the old password option from the config.
+                config.remove_option("user", "password")
 
-            # Writes to file.
-            with open("accinfo.ini", "w") as configfile:
-                config.write(configfile)
+                # Adds the devtools section and it's default options + values.
+                config.add_section("devtools")
+                config.set("devtools", "enabled", "false")
+                
+                # Adds the general section and it's default options + values.
+                config.add_section("general")
+                config.set("general", "autoupdate", "True")
+
+                # Writes to file.
+                with open("accinfo.ini", "w") as configfile:
+                    config.write(configfile)
+
+            except:
+
+                clearTerm()
+                print("accinfo.ini was unable to be upgraded. Please delete it to continue.")
+                input("Enter to quit...")
+                quit()
 
         # If the config's version is something else, unable to handle it.
         else:
             
             clearTerm()
-            print("Unable to upgrade accinfo.ini. Please delete it to continue.")
+            print("accinfo.ini's version is unable to be upgraded. Please delete it to continue.")
             input("Enter to quit...")
             quit()
 
@@ -324,7 +341,7 @@ class Apps:
             clearTerm()
 
             print("Please Choose an Option")
-            print("\n1. Change your username\n2. Change your password\n3. Toggle auto-update check")
+            print("\n1. Change your username\n2. Change your password\n3. Toggle auto-update check\n4. Manual update check")
             print("\n\n#. Credits\n\n0. Exit\n")
             try:
                 devtoolsBoolean = config["devtools"]["enabled"]
@@ -421,6 +438,11 @@ class Apps:
                 else:
                     print("\n\nCancelled.")
                     time.sleep(1.5)
+
+            # Manually checks for updates
+            elif settingsChoice == "4":
+                clearTerm()
+                Pre.update()
 
             # Very simple credits screen.
             elif settingsChoice == "#":
@@ -853,5 +875,11 @@ if __name__ == '__main__':
     if accinfo == True:
         config.read(file)
 
-    Pre.update()
+    try:
+        autoUpdate = config["general"]["autoupdate"]
+    except:
+        autoUpdate = "True"
+
+    if autoUpdate == "True":
+        Pre.update()
     Pre.setupChecker()
