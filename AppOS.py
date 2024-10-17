@@ -683,6 +683,7 @@ class Apps:
             clearTerm()
             config.read(file)
 
+            # Tries to read the test variable, and if it can't find it, then offer to create them.
             try:
                 setup = config["version"]["localVerTest"]
             except:
@@ -695,8 +696,10 @@ class Apps:
                 devtoolsChoice = str(input(": "))
 
                 if devtoolsChoice.lower() == "y":
+                    # Adds "localVerTest" and "localVerNum" to the config under [version].
                     config.set("version", "localVerTest", "False")
                     config.set("version", "localVerNum", str(__version__))
+
                     with open(file, "w") as configfile:
                         config.write(configfile)
                     
@@ -721,9 +724,11 @@ class Apps:
             
             devtoolsChoice = str(input(": "))
 
+            # Will toggle the local update test on and off.
             if devtoolsChoice == "1":
                 clearTerm()
                 testVar = config["version"]["localVerTest"]
+
                 if testVar == "True":
                     testState = "Enabled"
                 else:
@@ -731,6 +736,7 @@ class Apps:
 
                 print("Toggle the Local Update Test? (y/N)")
                 print("CURRENTLY: " + testState + ".\n\n")
+
                 devtoolsChoice = str(input(": "))
 
                 if devtoolsChoice.lower() == "y":
@@ -752,6 +758,7 @@ class Apps:
 
                     time.sleep(1.5)
 
+            # Will allow the user to change what the simulated online version number is.
             elif devtoolsChoice == "2":
                 clearTerm()
                 testNum = config["version"]["localVerNum"]
@@ -764,6 +771,7 @@ class Apps:
                 devtoolsChoice = str(input(": "))
 
                 config.set("version", "localVerNum", devtoolsChoice)
+
                 with open(file, "w") as configfile:
                     config.write(configfile)
 
@@ -771,6 +779,7 @@ class Apps:
 
                 time.sleep(1.5)
 
+            # Will remove the test variables from the config.
             elif devtoolsChoice == "3":
                 clearTerm()
                 print("*WARNING*")
@@ -781,8 +790,10 @@ class Apps:
                 devtoolsChoice = input(": ")
 
                 if devtoolsChoice.lower() == "y":
+                    # Removes "localVerTest" and "localVerNum" from under [version] in the config.
                     config.remove_option("version", "localVerTest")
                     config.remove_option("version", "localVerNum")
+
                     with open(file, "w") as configfile:
                         config.write(configfile)
                     
@@ -797,6 +808,7 @@ class Apps:
 
                     time.sleep(1.5)
 
+            # Exits the app.
             elif devtoolsChoice == "0":
                 devtoolsUpdateOptions = False
 
